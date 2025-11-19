@@ -1,0 +1,17 @@
+Cron job running command
+
+crontab -e
+
+which python #first see if the pyenv installed or not
+
+
+*/30 * * * * cd /home/mint/gymstation/python_scripts && /home/mint/.pyenv/shims/python whatsapp_automation_twilio.py >> /home/mint/gymstation/python_scripts/logs/whatsapp_cron.log 2>&1
+
+
+
+With venv activate and bash file
+
+chmod +x /home/mint/gymstation/python_scripts/run_python_script.sh
+
+*/1 * * * * /home/mint/gymstation/python_scripts/run_python_script.sh >> /home/mint/gymstation/python_scripts/logs/whatsapp_cron.log 2>&1
+
