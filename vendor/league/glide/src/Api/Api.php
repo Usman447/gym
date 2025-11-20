@@ -4,25 +4,27 @@ namespace League\Glide\Api;
 
 use Intervention\Image\ImageManager;
 use InvalidArgumentException;
-use League\Glide\Api\Manipulator\ManipulatorInterface;
-use Symfony\Component\HttpFoundation\Request;
+use League\Glide\Manipulators\ManipulatorInterface;
 
 class Api implements ApiInterface
 {
     /**
      * Intervention image manager.
+     *
      * @var ImageManager
      */
     protected $imageManager;
 
     /**
      * Collection of manipulators.
+     *
      * @var array
      */
     protected $manipulators;
 
     /**
      * Create API instance.
+     *
      * @param ImageManager $imageManager Intervention image manager.
      * @param array        $manipulators Collection of manipulators.
      */
@@ -34,6 +36,7 @@ class Api implements ApiInterface
 
     /**
      * Set the image manager.
+     *
      * @param ImageManager $imageManager Intervention image manager.
      */
     public function setImageManager(ImageManager $imageManager)
@@ -43,6 +46,7 @@ class Api implements ApiInterface
 
     /**
      * Get the image manager.
+     *
      * @return ImageManager Intervention image manager.
      */
     public function getImageManager()
@@ -52,6 +56,7 @@ class Api implements ApiInterface
 
     /**
      * Set the manipulators.
+     *
      * @param array $manipulators Collection of manipulators.
      */
     public function setManipulators(array $manipulators)
@@ -67,6 +72,7 @@ class Api implements ApiInterface
 
     /**
      * Get the manipulators.
+     *
      * @return array Collection of manipulators.
      */
     public function getManipulators()
@@ -76,16 +82,20 @@ class Api implements ApiInterface
 
     /**
      * Perform image manipulations.
-     * @param  Request $request The request object.
-     * @param  string  $source  Source image binary data.
-     * @return string  Manipulated image binary data.
+     *
+     * @param string $source Source image binary data.
+     * @param array  $params The manipulation params.
+     *
+     * @return string Manipulated image binary data.
      */
-    public function run(Request $request, $source)
+    public function run($source, array $params)
     {
         $image = $this->imageManager->make($source);
 
         foreach ($this->manipulators as $manipulator) {
-            $image = $manipulator->run($request, $image);
+            $manipulator->setParams($params);
+
+            $image = $manipulator->run($image);
         }
 
         return $image->getEncoded();

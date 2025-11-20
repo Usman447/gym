@@ -3,19 +3,16 @@
 namespace App;
 
 use Auth;
-use Lubus\Constants\Status;
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
-use Zizaco\Entrust\Traits\EntrustUserTrait;
-use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+// use Zizaco\Entrust\Traits\EntrustUserTrait;
+use Spatie\MediaLibrary\HasMedia\HasMedia;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
-use Spatie\MediaLibrary\HasMedia\Interfaces\HasMediaConversions;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Spatie\MediaLibrary\Models\Media;
 
-class User extends Model implements AuthenticatableContract, CanResetPasswordContract, HasMediaConversions
+class User extends Authenticatable implements HasMedia
 {
-    use Authenticatable, CanResetPassword, EntrustUserTrait, HasMediaTrait;
+    use Notifiable, HasMediaTrait;
 
     /**
      * The database table used by the model.
@@ -38,27 +35,53 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
      */
     protected $hidden = ['password', 'remember_token'];
 
-    // Media i.e. Image size conversion
-    public function registerMediaConversions()
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * Register media conversions
+     *
+     * @param Media|null $media
+     * @return void
+     */
+    public function registerMediaConversions(Media $media = null)
     {
         $this->addMediaConversion('thumb')
-             ->setManipulations(['w' => 50, 'h' => 50, 'q' => 100, 'fit' => 'crop'])
+             ->width(50)
+             ->height(50)
+             ->quality(100)
+             ->fit('crop', 50, 50)
              ->performOnCollections('staff');
 
         $this->addMediaConversion('form')
-             ->setManipulations(['w' => 70, 'h' => 70, 'q' => 100, 'fit' => 'crop'])
+             ->width(70)
+             ->height(70)
+             ->quality(100)
+             ->fit('crop', 70, 70)
              ->performOnCollections('staff');
     }
 
+    /**
+     * Scope to exclude archived users
+     */
     public function scopeExcludeArchive($query)
     {
-        if (Auth::User()->id != 1) {
+        if (Auth::check() && Auth::user()->id != 1) {
             return $query->where('status', '!=', \constStatus::Archive)->where('id', '!=', 1);
         }
 
         return $query->where('status', '!=', \constStatus::Archive);
     }
 
+    /**
+     * Get role user relationship
+     */
     public function roleUser()
     {
         return $this->hasOne('App\RoleUser');

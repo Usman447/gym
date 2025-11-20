@@ -110,7 +110,7 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <?php
-                                        $withoutGymie = App\Role::where('name', '!=', 'Gymie')->lists('name', 'id');
+                                        $withoutGymie = App\Role::where('name', '!=', 'Gymie')->pluck('name', 'id');
                                         $withGymie = App\Role::lists('name', 'id');
                                         ?>
                                         {!! Form::label('Role') !!}

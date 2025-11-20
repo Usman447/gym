@@ -11,26 +11,30 @@
         "imagemagick",
         "imagick"
     ],
-    "homepage": "https://github.com/thephpleague/glide",
+    "homepage": "http://glide.thephpleague.com",
     "license": "MIT",
-    "authors" : [
+    "authors": [
         {
             "name": "Jonathan Reinink",
             "email": "jonathan@reinink.ca",
             "homepage": "http://reinink.ca"
+        },
+        {
+            "name": "Titouan Galopin",
+            "email": "galopintitouan@gmail.com",
+            "homepage": "https://titouangalopin.com"
         }
     ],
     "require": {
-        "php": ">=5.4",
-        "intervention/image": "~2.1",
-        "league/flysystem": "~1.0",
-        "symfony/http-foundation": "~2.3|~3.0",
-        "symfony/http-kernel": "~2.3|~3.0"
+        "php": "^7.2|^8.0",
+        "intervention/image": "^2.4",
+        "league/flysystem": "^1.0",
+        "psr/http-message": "^1.0"
     },
     "require-dev": {
-        "mockery/mockery": "~0.9",
-        "phpunit/php-token-stream": ">=1.3.0",
-        "phpunit/phpunit": "~4.4"
+        "mockery/mockery": "^1.3.3",
+        "phpunit/phpunit": "^8.5|^9.0",
+        "phpunit/php-token-stream": "^3.1|^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -39,7 +43,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "0.3-dev"
+            "dev-master": "1.1-dev"
         }
     }
 }

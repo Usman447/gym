@@ -51,7 +51,7 @@
     <div class="col-sm-6">
         <div class="form-group">
             <?php 
-                $plans = App\Plan::where('status', '=', '1')->lists('plan_name', 'id');
+                $plans = App\Plan::where('status', '=', '1')->pluck('plan_name', 'id');
                 // For edit: pre-select plans if they exist in interested_in
                 $selectedPlans = [];
                 if (isset($enquiry) && $enquiry->interested_in) {

@@ -2,55 +2,52 @@
 
 namespace Spatie\MediaLibrary;
 
-use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Facades\File;
-use Spatie\Glide\GlideImage;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\Conversion\Conversion;
 use Spatie\MediaLibrary\Conversion\ConversionCollection;
-use Spatie\MediaLibrary\Conversion\ConversionCollectionFactory;
 use Spatie\MediaLibrary\Events\ConversionHasBeenCompleted;
+use Spatie\MediaLibrary\Events\ConversionWillStart;
+use Spatie\MediaLibrary\Filesystem\Filesystem;
 use Spatie\MediaLibrary\Helpers\File as MediaLibraryFileHelper;
+use Spatie\MediaLibrary\Helpers\ImageFactory;
+use Spatie\MediaLibrary\Helpers\TemporaryDirectory;
+use Spatie\MediaLibrary\ImageGenerators\ImageGenerator;
 use Spatie\MediaLibrary\Jobs\PerformConversions;
-use Spatie\PdfToImage\Pdf;
+use Spatie\MediaLibrary\Models\Media;
+use Spatie\MediaLibrary\ResponsiveImages\ResponsiveImageGenerator;
+use Storage;
 
 class FileManipulator
 {
-    use DispatchesJobs;
-
-    /**
-     * @var \Illuminate\Contracts\Events\Dispatcher
-     */
-    protected $events;
-
-    public function __construct(Dispatcher $events)
-    {
-        $this->events = $events;
-    }
-
     /**
      * Create all derived files for the given media.
      *
-     * @param \Spatie\MediaLibrary\Media $media
+     * @param \Spatie\MediaLibrary\Models\Media $media
+     * @param array $only
+     * @param bool $onlyMissing
      */
-    public function createDerivedFiles(Media $media)
+    public function createDerivedFiles(Media $media, array $only = [], bool $onlyMissing = false)
     {
-        if ($media->type == Media::TYPE_OTHER) {
-            return;
+        $profileCollection = ConversionCollection::createForMedia($media);
+
+        if (! empty($only)) {
+            $profileCollection = $profileCollection->filter(function ($collection) use ($only) {
+                return in_array($collection->getName(), $only);
+            });
         }
 
-        if ($media->type == Media::TYPE_PDF && !class_exists('Imagick')) {
-            return;
-        }
-
-        $profileCollection = ConversionCollectionFactory::createForMedia($media);
-
-        $this->performConversions($profileCollection->getNonQueuedConversions($media->collection_name), $media);
+        $this->performConversions(
+            $profileCollection->getNonQueuedConversions($media->collection_name),
+            $media,
+            $onlyMissing
+        );
 
         $queuedConversions = $profileCollection->getQueuedConversions($media->collection_name);
 
-        if (count($queuedConversions)) {
-            $this->dispatchQueuedConversions($media, $queuedConversions);
+        if ($queuedConversions->isNotEmpty()) {
+            $this->dispatchQueuedConversions($media, $queuedConversions, $onlyMissing);
         }
     }
 
@@ -58,104 +55,120 @@ class FileManipulator
      * Perform the given conversions for the given media.
      *
      * @param \Spatie\MediaLibrary\Conversion\ConversionCollection $conversions
-     * @param \Spatie\MediaLibrary\Media                           $media
+     * @param \Spatie\MediaLibrary\Models\Media $media
+     * @param bool $onlyMissing
      */
-    public function performConversions(ConversionCollection $conversions, Media $media)
+    public function performConversions(ConversionCollection $conversions, Media $media, bool $onlyMissing = false)
     {
-        $tempDirectory = $this->createTempDirectory();
-
-        $copiedOriginalFile = $tempDirectory.'/'.str_random(16).'.'.$media->extension;
-
-        app(Filesystem::class)->copyFromMediaLibrary($media, $copiedOriginalFile);
-
-        if ($media->type == Media::TYPE_PDF) {
-            $copiedOriginalFile = $this->convertToImage($copiedOriginalFile);
+        if ($conversions->isEmpty()) {
+            return;
         }
 
-        foreach ($conversions as $conversion) {
-            $conversionResult = $this->performConversion($media, $conversion, $copiedOriginalFile);
+        $imageGenerator = $this->determineImageGenerator($media);
 
-            $renamedFile = MediaLibraryFileHelper::renameInDirectory($conversionResult, $conversion->getName().'.'.
-                $conversion->getResultExtension(pathinfo($copiedOriginalFile, PATHINFO_EXTENSION)));
-
-            app(Filesystem::class)->copyToMediaLibrary($renamedFile, $media, true);
-
-            $this->events->fire(new ConversionHasBeenCompleted($media, $conversion));
+        if (! $imageGenerator) {
+            return;
         }
 
-        File::deleteDirectory($tempDirectory);
+        $temporaryDirectory = TemporaryDirectory::create();
+
+        $copiedOriginalFile = app(Filesystem::class)->copyFromMediaLibrary(
+            $media,
+            $temporaryDirectory->path(Str::random(16).'.'.$media->extension)
+        );
+
+        $conversions
+            ->reject(function (Conversion $conversion) use ($onlyMissing, $media) {
+                $relativePath = $media->getPath($conversion->getName());
+
+                $rootPath = config('filesystems.disks.'.$media->disk.'.root');
+
+                if ($rootPath) {
+                    $relativePath = str_replace($rootPath, '', $relativePath);
+                }
+
+                return $onlyMissing && Storage::disk($media->disk)->exists($relativePath);
+            })
+            ->each(function (Conversion $conversion) use ($media, $imageGenerator, $copiedOriginalFile) {
+                event(new ConversionWillStart($media, $conversion, $copiedOriginalFile));
+
+                $copiedOriginalFile = $imageGenerator->convert($copiedOriginalFile, $conversion);
+
+                $manipulationResult = $this->performManipulations($media, $conversion, $copiedOriginalFile);
+
+                $newFileName = $conversion->getConversionFile($media->file_name);
+
+                $renamedFile = MediaLibraryFileHelper::renameInDirectory($manipulationResult, $newFileName);
+
+                if ($conversion->shouldGenerateResponsiveImages()) {
+                    app(ResponsiveImageGenerator::class)->generateResponsiveImagesForConversion(
+                        $media,
+                        $conversion,
+                        $renamedFile
+                    );
+                }
+
+                app(Filesystem::class)->copyToMediaLibrary($renamedFile, $media, 'conversions');
+
+                $media->markAsConversionGenerated($conversion->getName(), true);
+
+                event(new ConversionHasBeenCompleted($media, $conversion));
+            });
+
+        $temporaryDirectory->delete();
     }
 
-    /**
-     * Perform the conversion.
-     *
-     * @param \Spatie\MediaLibrary\Media $media
-     * @param Conversion                 $conversion
-     * @param string                     $copiedOriginalFile
-     *
-     * @return string
-     */
-    public function performConversion(Media $media, Conversion $conversion, $copiedOriginalFile)
+    public function performManipulations(Media $media, Conversion $conversion, string $imageFile): string
     {
-        $conversionTempFile = pathinfo($copiedOriginalFile, PATHINFO_DIRNAME).'/'.string()->random(16).
-            $conversion->getName().'.'.$media->extension;
-
-        File::copy($copiedOriginalFile, $conversionTempFile);
-
-        foreach ($conversion->getManipulations() as $manipulation) {
-            (new GlideImage())
-                ->load($conversionTempFile, $manipulation)
-                ->useAbsoluteSourceFilePath()
-                ->save($conversionTempFile);
+        if ($conversion->getManipulations()->isEmpty()) {
+            return $imageFile;
         }
+
+        $conversionTempFile = pathinfo($imageFile, PATHINFO_DIRNAME).'/'.Str::random(16)
+            .$conversion->getName()
+            .'.'
+            .$media->extension;
+
+        File::copy($imageFile, $conversionTempFile);
+
+        $supportedFormats = ['jpg', 'pjpg', 'png', 'gif'];
+        if ($conversion->shouldKeepOriginalImageFormat() && in_array($media->extension, $supportedFormats)) {
+            $conversion->format($media->extension);
+        }
+
+        ImageFactory::load($conversionTempFile)
+            ->manipulate($conversion->getManipulations())
+            ->save();
 
         return $conversionTempFile;
     }
 
-    /**
-     * Create a directory to store some working files.
-     *
-     * @return string
-     */
-    public function createTempDirectory()
+    protected function dispatchQueuedConversions(Media $media, ConversionCollection $queuedConversions, bool $onlyMissing = false)
     {
-        $tempDirectory = storage_path('medialibrary/temp/'.str_random(16));
+        $performConversionsJobClass = config('medialibrary.jobs.perform_conversions', PerformConversions::class);
 
-        File::makeDirectory($tempDirectory, 493, true);
+        $job = new $performConversionsJobClass($queuedConversions, $media, $onlyMissing);
 
-        return $tempDirectory;
-    }
-
-    /**
-     * @param string $pdfFile
-     *
-     * @return string
-     */
-    protected function convertToImage($pdfFile)
-    {
-        $imageFile = string($pdfFile)->pop('.').'.jpg';
-
-        (new Pdf($pdfFile))->saveImage($imageFile);
-
-        return $imageFile;
-    }
-
-    /**
-     * Dispatch the given conversions.
-     *
-     * @param Media                $media
-     * @param ConversionCollection $queuedConversions
-     */
-    protected function dispatchQueuedConversions(Media $media, ConversionCollection $queuedConversions)
-    {
-        $job = new PerformConversions($queuedConversions, $media);
-
-        $customQueue = config('laravel-medialibrary.queue_name');
-
-        if ($customQueue != '') {
+        if ($customQueue = config('medialibrary.queue_name')) {
             $job->onQueue($customQueue);
         }
 
-        $this->dispatch($job);
+        app(Dispatcher::class)->dispatch($job);
+    }
+
+    /**
+     * @param \Spatie\MediaLibrary\Models\Media $media
+     *
+     * @return \Spatie\MediaLibrary\ImageGenerators\ImageGenerator|null
+     */
+    public function determineImageGenerator(Media $media)
+    {
+        return $media->getImageGenerators()
+            ->map(function (string $imageGeneratorClassName) {
+                return app($imageGeneratorClassName);
+            })
+            ->first(function (ImageGenerator $imageGenerator) use ($media) {
+                return $imageGenerator->canConvert($media);
+            });
     }
 }

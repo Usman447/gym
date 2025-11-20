@@ -2,9 +2,6 @@
 
 namespace Illuminate\Validation;
 
-use Illuminate\Contracts\Validation\ValidationException;
-use Illuminate\Contracts\Validation\UnauthorizedException;
-
 /**
  * Provides default implementation of ValidatesWhenResolved contract.
  */
@@ -15,15 +12,29 @@ trait ValidatesWhenResolvedTrait
      *
      * @return void
      */
-    public function validate()
+    public function validateResolved()
     {
-        $instance = $this->getValidatorInstance();
+        $this->prepareForValidation();
 
         if (! $this->passesAuthorization()) {
             $this->failedAuthorization();
-        } elseif (! $instance->passes()) {
+        }
+
+        $instance = $this->getValidatorInstance();
+
+        if ($instance->fails()) {
             $this->failedValidation($instance);
         }
+    }
+
+    /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        // no default action
     }
 
     /**
@@ -40,7 +51,9 @@ trait ValidatesWhenResolvedTrait
      * Handle a failed validation attempt.
      *
      * @param  \Illuminate\Validation\Validator  $validator
-     * @return mixed
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     protected function failedValidation(Validator $validator)
     {
@@ -64,7 +77,9 @@ trait ValidatesWhenResolvedTrait
     /**
      * Handle a failed authorization attempt.
      *
-     * @return mixed
+     * @return void
+     *
+     * @throws \Illuminate\Validation\UnauthorizedException
      */
     protected function failedAuthorization()
     {

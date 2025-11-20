@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Auth;
 use App\Member;
 use App\SmsLog;
-use JavaScript;
+// use JavaScript;
 use App\Enquiry;
 use App\Expense;
 use App\Setting;
@@ -157,10 +157,10 @@ class DashboardController extends Controller
         // Members per plan (filtered by timings)
         $jsMembersPerPlan = $this->getFilteredMembersPerPlan();
         
-        JavaScript::put([
-            'jsRegistraionsCount' => $jsRegistraionsCount,
-            'jsMembersPerPlan' => $jsMembersPerPlan,
-        ]);
+        // JavaScript::put([
+        //     'jsRegistraionsCount' => $jsRegistraionsCount,
+        //     'jsMembersPerPlan' => $jsMembersPerPlan,
+        // ]);
 
         // Apply timings filter to expiring subscriptions
         $expiringsQuery = Subscription::dashboardExpiring();
@@ -218,7 +218,11 @@ class DashboardController extends Controller
     private function getFilteredRegistrationsTrend()
     {
         $user = Auth::user();
-        $startDate = new \Carbon\Carbon(\App\Setting::where('key', '=', 'financial_start')->pluck('value'));
+        // $startDate = new \Carbon\Carbon(\App\Setting::where('key', '=', 'financial_start')->pluck('value'));
+        
+        $financialStartValue = \App\Setting::where('key', '=', 'financial_start')->value('value');
+        $startDate = $financialStartValue ? new \Carbon\Carbon($financialStartValue) : \Carbon\Carbon::now()->startOfYear();
+
         $data = [];
 
         for ($i = 1; $i <= 12; $i++) {

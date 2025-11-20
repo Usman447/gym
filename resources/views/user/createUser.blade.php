@@ -108,7 +108,7 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <?php $roles = App\Role::where('id', '!=', '1')->lists('name', 'id'); ?>
+                                        <?php $roles = App\Role::where('id', '!=', '1')->pluck('name', 'id'); ?>
                                         {!! Form::label('Role') !!}
                                         {!! Form::select('role_id',$roles,null,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'role_id']) !!}
                                     </div>

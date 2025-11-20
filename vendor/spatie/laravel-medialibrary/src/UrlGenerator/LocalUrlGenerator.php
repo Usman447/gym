@@ -2,73 +2,103 @@
 
 namespace Spatie\MediaLibrary\UrlGenerator;
 
-use Spatie\MediaLibrary\Exceptions\UrlCouldNotBeDetermined;
+use DateTimeInterface;
+use Illuminate\Support\Str;
+use Spatie\MediaLibrary\Exceptions\UrlCannotBeDetermined;
 
-class LocalUrlGenerator extends BaseUrlGenerator implements UrlGenerator
+class LocalUrlGenerator extends BaseUrlGenerator
 {
     /**
-     * Get the url for the profile of a media item.
+     * Get the url for a media item.
      *
      * @return string
      *
-     * @throws \Spatie\MediaLibrary\Exceptions\UrlCouldNotBeDetermined
+     * @throws \Spatie\MediaLibrary\Exceptions\UrlCannotBeDetermined
      */
-    public function getUrl()
+    public function getUrl(): string
     {
-        if (!string($this->getStoragePath())->startsWith(public_path())) {
-            throw new UrlCouldNotBeDetermined('The storage path is not part of the public path');
-        }
+        $url = $this->getBaseMediaDirectoryUrl().'/'.$this->getPathRelativeToRoot();
 
-        $url = $this->getBaseMediaDirectory().'/'.$this->getPathRelativeToRoot();
+        $url = $this->makeCompatibleForNonUnixHosts($url);
 
-        return $this->makeCompatibleForNonUnixHosts($url);
+        $url = $this->rawUrlEncodeFilename($url);
+
+        $url = $this->versionUrl($url);
+
+        return $url;
     }
 
     /**
-     * Get the path for the profile of a media item.
+     * @param \DateTimeInterface $expiration
+     * @param array              $options
      *
      * @return string
+     *
+     * @throws \Spatie\MediaLibrary\Exceptions\UrlCannotBeDetermined
      */
-    public function getPath()
+    public function getTemporaryUrl(DateTimeInterface $expiration, array $options = []): string
+    {
+        throw UrlCannotBeDetermined::filesystemDoesNotSupportTemporaryUrls();
+    }
+
+    /*
+     * Get the path for the profile of a media item.
+     */
+    public function getPath(): string
     {
         return $this->getStoragePath().'/'.$this->getPathRelativeToRoot();
     }
 
-    /**
-     * Get the directory where all files of the media item are stored.
-     *
-     * @return \Spatie\String\Str
-     */
-    protected function getBaseMediaDirectory()
+    protected function getBaseMediaDirectoryUrl(): string
     {
-        $baseDirectory = string($this->getStoragePath())->replace(public_path(), '');
+        if ($diskUrl = $this->config->get("filesystems.disks.{$this->media->disk}.url")) {
+            return str_replace(url('/'), '', $diskUrl);
+        }
 
-        return $baseDirectory;
+        if (! Str::startsWith($this->getStoragePath(), public_path())) {
+            throw UrlCannotBeDetermined::mediaNotPubliclyAvailable($this->getStoragePath(), public_path());
+        }
+
+        return $this->getBaseMediaDirectory();
     }
 
-    /**
-     * Get the path where the whole medialibrary is stored.
-     *
-     * @return string
+    /*
+     * Get the directory where all files of the media item are stored.
      */
-    protected function getStoragePath()
+    protected function getBaseMediaDirectory(): string
     {
-        $diskRootPath = $this->config->get('filesystems.disks.'.$this->media->disk.'.root');
+        return str_replace(public_path(), '', $this->getStoragePath());
+    }
+
+    /*
+     * Get the path where the whole medialibrary is stored.
+     */
+    protected function getStoragePath() : string
+    {
+        $diskRootPath = $this->config->get("filesystems.disks.{$this->media->disk}.root");
 
         return realpath($diskRootPath);
     }
 
-    /**
-     * @param string $url
-     *
-     * @return string
-     */
-    protected function makeCompatibleForNonUnixHosts($url)
+    protected function makeCompatibleForNonUnixHosts(string $url): string
     {
         if (DIRECTORY_SEPARATOR != '/') {
             $url = str_replace(DIRECTORY_SEPARATOR, '/', $url);
         }
 
         return $url;
+    }
+
+    /**
+     * Get the url to the directory containing responsive images.
+     *
+     * @return string
+     */
+    public function getResponsiveImagesDirectoryUrl(): string
+    {
+        $base = Str::finish($this->getBaseMediaDirectoryUrl(), '/');
+        $path = $this->pathGenerator->getPathForResponsiveImages($this->media);
+
+        return Str::finish(url($base.$path), '/');
     }
 }

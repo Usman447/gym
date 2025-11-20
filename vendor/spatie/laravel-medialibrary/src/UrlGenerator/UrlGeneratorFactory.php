@@ -2,49 +2,44 @@
 
 namespace Spatie\MediaLibrary\UrlGenerator;
 
-use Spatie\MediaLibrary\Media;
+use Spatie\MediaLibrary\Conversion\ConversionCollection;
+use Spatie\MediaLibrary\Exceptions\InvalidUrlGenerator;
+use Spatie\MediaLibrary\Models\Media;
 use Spatie\MediaLibrary\PathGenerator\PathGeneratorFactory;
 
 class UrlGeneratorFactory
 {
-    public static function createForMedia(Media $media)
+    public static function createForMedia(Media $media, string $conversionName = '') : UrlGenerator
     {
-        $urlGeneratorClass = 'Spatie\MediaLibrary\UrlGenerator\\'.ucfirst($media->getDiskDriverName()).'UrlGenerator';
+        $urlGeneratorClass = config('medialibrary.url_generator')
+            ?: 'Spatie\MediaLibrary\UrlGenerator\\'.ucfirst($media->getDiskDriverName()).'UrlGenerator';
 
-        $customUrlClass = config('laravel-medialibrary.custom_url_generator_class');
+        static::guardAgainstInvalidUrlGenerator($urlGeneratorClass);
 
-        $urlGenerator = self::isAValidUrlGeneratorClass($customUrlClass)
-            ? app($customUrlClass)
-            : app($urlGeneratorClass);
-
+        $urlGenerator = app($urlGeneratorClass);
         $pathGenerator = PathGeneratorFactory::create();
 
-        $urlGenerator->setMedia($media)->setPathGenerator($pathGenerator);
+        $urlGenerator
+            ->setMedia($media)
+            ->setPathGenerator($pathGenerator);
+
+        if ($conversionName !== '') {
+            $conversion = ConversionCollection::createForMedia($media)->getByName($conversionName);
+
+            $urlGenerator->setConversion($conversion);
+        }
 
         return $urlGenerator;
     }
 
-    /**
-     * Determine if the the given class is a valid UrlGenerator.
-     *
-     * @param $customUrlClass
-     *
-     * @return bool
-     */
-    protected static function isAValidUrlGeneratorClass($customUrlClass)
+    public static function guardAgainstInvalidUrlGenerator(string $urlGeneratorClass)
     {
-        if (!$customUrlClass) {
-            return false;
+        if (! class_exists($urlGeneratorClass)) {
+            throw InvalidUrlGenerator::doesntExist($urlGeneratorClass);
         }
 
-        if (!class_exists($customUrlClass)) {
-            return false;
+        if (! is_subclass_of($urlGeneratorClass, UrlGenerator::class)) {
+            throw InvalidUrlGenerator::isntAUrlGenerator($urlGeneratorClass);
         }
-
-        if (!is_subclass_of($customUrlClass, UrlGenerator::class)) {
-            return false;
-        }
-
-        return true;
     }
 }

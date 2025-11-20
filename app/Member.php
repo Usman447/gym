@@ -3,14 +3,15 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
+// use Sofa\Eloquence\Eloquence;  // Temporarily disabled - will add back if needed
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia\HasMedia;
 use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
-use Spatie\MediaLibrary\HasMedia\Interfaces\HasMediaConversions;
+use Spatie\MediaLibrary\Models\Media;
 
-class Member extends Model implements HasMediaConversions
+class Member extends Model implements HasMedia
 {
-    use HasMediaTrait, Eloquence;
+    use HasMediaTrait; // Removed Eloquence temporarily
     use createdByUser, updatedByUser;
 
     protected $table = 'mst_members';
@@ -48,12 +49,27 @@ class Member extends Model implements HasMediaConversions
         'contact' => 20,
     ];
 
-    // Media i.e. Image size conversion
-    public function registerMediaConversions()
+    /**
+     * Register media conversions
+     *
+     * @param Media|null $media
+     * @return void
+     */
+    public function registerMediaConversions(Media $media = null)
     {
-        $this->addMediaConversion('thumb')->setManipulations(['w' => 50, 'h' => 50, 'q' => 100, 'fit' => 'crop'])->performOnCollections('profile');
+        $this->addMediaConversion('thumb')
+             ->width(50)
+             ->height(50)
+             ->quality(100)
+             ->fit('crop', 50, 50)
+             ->performOnCollections('profile');
 
-        $this->addMediaConversion('form')->setManipulations(['w' => 70, 'h' => 70, 'q' => 100, 'fit' => 'crop'])->performOnCollections('profile', 'proof');
+        $this->addMediaConversion('form')
+             ->width(70)
+             ->height(70)
+             ->quality(100)
+             ->fit('crop', 70, 70)
+             ->performOnCollections('profile', 'proof');
     }
 
     //Relationships

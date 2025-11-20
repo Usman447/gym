@@ -111,15 +111,13 @@ return [
     'providers' => [
 
         /*
-     * Laravel Framework Service Providers...
-     */
-        Illuminate\Foundation\Providers\ArtisanServiceProvider::class,
+        * Laravel Framework Service Providers...
+        */
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
         Illuminate\Cache\CacheServiceProvider::class,
         Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
-        Illuminate\Routing\ControllerServiceProvider::class,
         Illuminate\Cookie\CookieServiceProvider::class,
         Illuminate\Database\DatabaseServiceProvider::class,
         Illuminate\Encryption\EncryptionServiceProvider::class,
@@ -127,7 +125,8 @@ return [
         Illuminate\Foundation\Providers\FoundationServiceProvider::class,
         Illuminate\Hashing\HashServiceProvider::class,
         Illuminate\Mail\MailServiceProvider::class,
-        Illuminate\Pagination\PaginationServiceProvider::class,
+        Illuminate\Notifications\NotificationServiceProvider::class,
+	    Illuminate\Pagination\PaginationServiceProvider::class,
         Illuminate\Pipeline\PipelineServiceProvider::class,
         Illuminate\Queue\QueueServiceProvider::class,
         Illuminate\Redis\RedisServiceProvider::class,
@@ -145,20 +144,20 @@ return [
         App\Providers\RouteServiceProvider::class,
 
         /*
-         * Packages service providers
-         */
+        * Packages service providers
+        */
 
-        Laracasts\Flash\FlashServiceProvider::class,
-        Collective\Html\HtmlServiceProvider::class,
+        // Laracasts\Flash\FlashServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
-        Laracasts\Utilities\JavaScript\JavaScriptServiceProvider::class,
-        Sofa\Eloquence\ServiceProvider::class,
-        Barryvdh\Debugbar\ServiceProvider::class,
-        Zizaco\Entrust\EntrustServiceProvider::class,
-        Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
-        Spatie\MediaLibrary\MediaLibraryServiceProvider::class,
-        Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class,
-        Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
+        // Laracasts\Utilities\JavaScript\JavaScriptServiceProvider::class,
+        // Sofa\Eloquence\ServiceProvider::class,
+        // Barryvdh\Debugbar\ServiceProvider::class,
+        // Zizaco\Entrust\EntrustServiceProvider::class,
+        // Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
+	    Spatie\MediaLibrary\MediaLibraryServiceProvider::class,
+        // Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class,
+        // Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
     ],
 
     /*
@@ -210,9 +209,9 @@ return [
         'Form' => Collective\Html\FormFacade::class,
         'Html' => Collective\Html\HtmlFacade::class,
 
-        'Flash' => Laracasts\Flash\Flash::class,
+        // 'Flash' => Laracasts\Flash\Flash::class,
         'Image' => Intervention\Image\Facades\Image::class,
-        'Debugbar' => Barryvdh\Debugbar\Facade::class,
+        // 'Debugbar' => Barryvdh\Debugbar\Facade::class,
         'Entrust' => Zizaco\Entrust\EntrustFacade::class,
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,

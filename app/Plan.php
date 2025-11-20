@@ -3,7 +3,7 @@
 namespace App;
 
 use Lubus\Constants\Status;
-use Sofa\Eloquence\Eloquence;
+// use Sofa\Eloquence\Eloquence;  // Temporarily disabled
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
@@ -22,10 +22,10 @@ class Plan extends Model
         'updated_by',
     ];
 
-    //Eloquence Search mapping
-    use Eloquence;
+    // use Eloquence;  // Temporarily disabled
     use createdByUser, updatedByUser;
 
+    // Searchable columns (not active without Eloquence, but kept for reference)
     protected $searchableColumns = [
         'plan_code' => 20,
         'plan_name' => 10,

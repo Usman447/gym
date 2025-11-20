@@ -19,9 +19,9 @@ namespace Symfony\Component\Finder\Iterator;
  *
  * @author Fabien Potencier <fabien@symfony.com>
  */
-class CustomFilterIterator extends FilterIterator
+class CustomFilterIterator extends \FilterIterator
 {
-    private $filters = array();
+    private $filters = [];
 
     /**
      * @param \Iterator  $iterator The Iterator to filter
@@ -32,7 +32,7 @@ class CustomFilterIterator extends FilterIterator
     public function __construct(\Iterator $iterator, array $filters)
     {
         foreach ($filters as $filter) {
-            if (!is_callable($filter)) {
+            if (!\is_callable($filter)) {
                 throw new \InvalidArgumentException('Invalid PHP callback.');
             }
         }
@@ -46,12 +46,13 @@ class CustomFilterIterator extends FilterIterator
      *
      * @return bool true if the value should be kept, false otherwise
      */
+    #[\ReturnTypeWillChange]
     public function accept()
     {
         $fileinfo = $this->current();
 
         foreach ($this->filters as $filter) {
-            if (false === call_user_func($filter, $fileinfo)) {
+            if (false === $filter($fileinfo)) {
                 return false;
             }
         }
