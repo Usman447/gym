@@ -11,11 +11,13 @@
                             <div class="panel-head font-size-20">Enter details of the expense category</div>
                         </div>
                         <div class="panel-body">
-                            {!! Form::model($expenseCategory, ['method' => 'POST','action' => ['ExpenseCategoriesController@update',$expenseCategory->id], 'id' => 'expensecategoriesform']) !!}
+                            <form action="{{ action(['App\Http\Controllers\ExpenseCategoriesController@update', $expenseCategory->id]) }}" method="POST" id="expensecategoriesform">
+                                @csrf
+                                @method('PUT')
 
                             @include('expenseCategories.form',['submitButtonText' => 'Update'])
 
-                            {!! Form::Close() !!}
+                            </form>
                         </div>
                     </div>
                 </div>

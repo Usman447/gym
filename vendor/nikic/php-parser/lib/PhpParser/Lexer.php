@@ -1,286 +1,116 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace PhpParser;
 
-use PhpParser\Node\Scalar\LNumber;
-use PhpParser\Parser\Tokens;
+require __DIR__ . '/compatibility_tokens.php';
 
-class Lexer
-{
-    protected $code;
-    protected $tokens;
-    protected $pos;
-    protected $line;
-    protected $filePos;
-
-    protected $tokenMap;
-    protected $dropTokens;
-
-    protected $usedAttributes;
-
+class Lexer {
     /**
-     * Creates a Lexer.
+     * Tokenize the provided source code.
      *
-     * @param array $options Options array. Currently only the 'usedAttributes' option is supported,
-     *                       which is an array of attributes to add to the AST nodes. Possible
-     *                       attributes are: 'comments', 'startLine', 'endLine', 'startTokenPos',
-     *                       'endTokenPos', 'startFilePos', 'endFilePos'. The option defaults to the
-     *                       first three. For more info see getNextToken() docs.
+     * The token array is in the same format as provided by the PhpToken::tokenize() method in
+     * PHP 8.0. The tokens are instances of PhpParser\Token, to abstract over a polyfill
+     * implementation in earlier PHP version.
+     *
+     * The token array is terminated by a sentinel token with token ID 0.
+     * The token array does not discard any tokens (i.e. whitespace and comments are included).
+     * The token position attributes are against this token array.
+     *
+     * @param string $code The source code to tokenize.
+     * @param ErrorHandler|null $errorHandler Error handler to use for lexing errors. Defaults to
+     *                                        ErrorHandler\Throwing.
+     * @return Token[] Tokens
      */
-    public function __construct(array $options = array()) {
-        // map from internal tokens to PhpParser tokens
-        $this->tokenMap = $this->createTokenMap();
+    public function tokenize(string $code, ?ErrorHandler $errorHandler = null): array {
+        if (null === $errorHandler) {
+            $errorHandler = new ErrorHandler\Throwing();
+        }
 
-        // map of tokens to drop while lexing (the map is only used for isset lookup,
-        // that's why the value is simply set to 1; the value is never actually used.)
-        $this->dropTokens = array_fill_keys(
-            array(T_WHITESPACE, T_OPEN_TAG, T_COMMENT, T_DOC_COMMENT), 1
-        );
-
-        // the usedAttributes member is a map of the used attribute names to a dummy
-        // value (here "true")
-        $options += array(
-            'usedAttributes' => array('comments', 'startLine', 'endLine'),
-        );
-        $this->usedAttributes = array_fill_keys($options['usedAttributes'], true);
-    }
-
-    /**
-     * Initializes the lexer for lexing the provided source code.
-     *
-     * @param string $code The source code to lex
-     *
-     * @throws Error on lexing errors (unterminated comment or unexpected character)
-     */
-    public function startLexing($code) {
         $scream = ini_set('xdebug.scream', '0');
 
-        $this->resetErrors();
-        $this->tokens = @token_get_all($code);
-        $this->handleErrors();
+        $tokens = @Token::tokenize($code);
+        $this->postprocessTokens($tokens, $errorHandler);
 
         if (false !== $scream) {
             ini_set('xdebug.scream', $scream);
         }
 
-        $this->code = $code; // keep the code around for __halt_compiler() handling
-        $this->pos  = -1;
-        $this->line =  1;
-        $this->filePos = 0;
+        return $tokens;
     }
 
-    protected function resetErrors() {
-        if (function_exists('error_clear_last')) {
-            error_clear_last();
+    private function handleInvalidCharacter(Token $token, ErrorHandler $errorHandler): void {
+        $chr = $token->text;
+        if ($chr === "\0") {
+            // PHP cuts error message after null byte, so need special case
+            $errorMsg = 'Unexpected null byte';
         } else {
-            // set error_get_last() to defined state by forcing an undefined variable error
-            set_error_handler(function() { return false; }, 0);
-            @$undefinedVariable;
-            restore_error_handler();
+            $errorMsg = sprintf(
+                'Unexpected character "%s" (ASCII %d)', $chr, ord($chr)
+            );
         }
+
+        $errorHandler->handleError(new Error($errorMsg, [
+            'startLine' => $token->line,
+            'endLine' => $token->line,
+            'startFilePos' => $token->pos,
+            'endFilePos' => $token->pos,
+        ]));
     }
 
-    protected function handleErrors() {
-        $error = error_get_last();
-        if (null === $error) {
+    private function isUnterminatedComment(Token $token): bool {
+        return $token->is([\T_COMMENT, \T_DOC_COMMENT])
+            && substr($token->text, 0, 2) === '/*'
+            && substr($token->text, -2) !== '*/';
+    }
+
+    /**
+     * @param list<Token> $tokens
+     */
+    protected function postprocessTokens(array &$tokens, ErrorHandler $errorHandler): void {
+        // This function reports errors (bad characters and unterminated comments) in the token
+        // array, and performs certain canonicalizations:
+        //  * Use PHP 8.1 T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG and
+        //    T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG tokens used to disambiguate intersection types.
+        //  * Add a sentinel token with ID 0.
+
+        $numTokens = \count($tokens);
+        if ($numTokens === 0) {
+            // Empty input edge case: Just add the sentinel token.
+            $tokens[] = new Token(0, "\0", 1, 0);
             return;
         }
 
-        if (preg_match(
-            '~^Unterminated comment starting line ([0-9]+)$~',
-            $error['message'], $matches
-        )) {
-            throw new Error('Unterminated comment', (int) $matches[1]);
-        }
-
-        if (preg_match(
-            '~^Unexpected character in input:  \'(.)\' \(ASCII=([0-9]+)\)~s',
-            $error['message'], $matches
-        )) {
-            throw new Error(sprintf(
-                'Unexpected character "%s" (ASCII %d)',
-                $matches[1], $matches[2]
-            ));
-        }
-
-        // PHP cuts error message after null byte, so need special case
-        if (preg_match('~^Unexpected character in input:  \'$~', $error['message'])) {
-            throw new Error('Unexpected null byte');
-        }
-    }
-
-    /**
-     * Fetches the next token.
-     *
-     * The available attributes are determined by the 'usedAttributes' option, which can
-     * be specified in the constructor. The following attributes are supported:
-     *
-     *  * 'comments'      => Array of PhpParser\Comment or PhpParser\Comment\Doc instances,
-     *                       representing all comments that occurred between the previous
-     *                       non-discarded token and the current one.
-     *  * 'startLine'     => Line in which the node starts.
-     *  * 'endLine'       => Line in which the node ends.
-     *  * 'startTokenPos' => Offset into the token array of the first token in the node.
-     *  * 'endTokenPos'   => Offset into the token array of the last token in the node.
-     *  * 'startFilePos'  => Offset into the code string of the first character that is part of the node.
-     *  * 'endFilePos'    => Offset into the code string of the last character that is part of the node.
-     *
-     * @param mixed $value           Variable to store token content in
-     * @param mixed $startAttributes Variable to store start attributes in
-     * @param mixed $endAttributes   Variable to store end attributes in
-     *
-     * @return int Token id
-     */
-    public function getNextToken(&$value = null, &$startAttributes = null, &$endAttributes = null) {
-        $startAttributes = array();
-        $endAttributes   = array();
-
-        while (1) {
-            if (isset($this->tokens[++$this->pos])) {
-                $token = $this->tokens[$this->pos];
-            } else {
-                // EOF token with ID 0
-                $token = "\0";
+        for ($i = 0; $i < $numTokens; $i++) {
+            $token = $tokens[$i];
+            if ($token->id === \T_BAD_CHARACTER) {
+                $this->handleInvalidCharacter($token, $errorHandler);
             }
 
-            if (isset($this->usedAttributes['startLine'])) {
-                $startAttributes['startLine'] = $this->line;
-            }
-            if (isset($this->usedAttributes['startTokenPos'])) {
-                $startAttributes['startTokenPos'] = $this->pos;
-            }
-            if (isset($this->usedAttributes['startFilePos'])) {
-                $startAttributes['startFilePos'] = $this->filePos;
-            }
-
-            if (\is_string($token)) {
-                $value = $token;
-                if (isset($token[1])) {
-                    // bug in token_get_all
-                    $this->filePos += 2;
-                    $id = ord('"');
-                } else {
-                    $this->filePos += 1;
-                    $id = ord($token);
+            if ($token->id === \ord('&')) {
+                $next = $i + 1;
+                while (isset($tokens[$next]) && $tokens[$next]->id === \T_WHITESPACE) {
+                    $next++;
                 }
-            } elseif (!isset($this->dropTokens[$token[0]])) {
-                $value = $token[1];
-                $id = $this->tokenMap[$token[0]];
-
-                $this->line += substr_count($value, "\n");
-                $this->filePos += \strlen($value);
-            } else {
-                if (T_COMMENT === $token[0] || T_DOC_COMMENT === $token[0]) {
-                    if (isset($this->usedAttributes['comments'])) {
-                        $comment = T_DOC_COMMENT === $token[0]
-                            ? new Comment\Doc($token[1], $this->line, $this->filePos)
-                            : new Comment($token[1], $this->line, $this->filePos);
-                        $startAttributes['comments'][] = $comment;
-                    }
-                }
-
-                $this->line += substr_count($token[1], "\n");
-                $this->filePos += \strlen($token[1]);
-                continue;
-            }
-
-            if (isset($this->usedAttributes['endLine'])) {
-                $endAttributes['endLine'] = $this->line;
-            }
-            if (isset($this->usedAttributes['endTokenPos'])) {
-                $endAttributes['endTokenPos'] = $this->pos;
-            }
-            if (isset($this->usedAttributes['endFilePos'])) {
-                $endAttributes['endFilePos'] = $this->filePos - 1;
-            }
-
-            return $id;
-        }
-
-        throw new \RuntimeException('Reached end of lexer loop');
-    }
-
-    /**
-     * Returns the token array for current code.
-     *
-     * The token array is in the same format as provided by the
-     * token_get_all() function and does not discard tokens (i.e.
-     * whitespace and comments are included). The token position
-     * attributes are against this token array.
-     *
-     * @return array Array of tokens in token_get_all() format
-     */
-    public function getTokens() {
-        return $this->tokens;
-    }
-
-    /**
-     * Handles __halt_compiler() by returning the text after it.
-     *
-     * @return string Remaining text
-     */
-    public function handleHaltCompiler() {
-        // text after T_HALT_COMPILER, still including ();
-        $textAfter = substr($this->code, $this->filePos);
-
-        // ensure that it is followed by ();
-        // this simplifies the situation, by not allowing any comments
-        // in between of the tokens.
-        if (!preg_match('~^\s*\(\s*\)\s*(?:;|\?>\r?\n?)~', $textAfter, $matches)) {
-            throw new Error('__HALT_COMPILER must be followed by "();"');
-        }
-
-        // prevent the lexer from returning any further tokens
-        $this->pos = count($this->tokens);
-
-        // return with (); removed
-        return (string) substr($textAfter, strlen($matches[0])); // (string) converts false to ''
-    }
-
-    /**
-     * Creates the token map.
-     *
-     * The token map maps the PHP internal token identifiers
-     * to the identifiers used by the Parser. Additionally it
-     * maps T_OPEN_TAG_WITH_ECHO to T_ECHO and T_CLOSE_TAG to ';'.
-     *
-     * @return array The token map
-     */
-    protected function createTokenMap() {
-        $tokenMap = array();
-
-        // 256 is the minimum possible token number, as everything below
-        // it is an ASCII value
-        for ($i = 256; $i < 1000; ++$i) {
-            if (T_DOUBLE_COLON === $i) {
-                // T_DOUBLE_COLON is equivalent to T_PAAMAYIM_NEKUDOTAYIM
-                $tokenMap[$i] = Tokens::T_PAAMAYIM_NEKUDOTAYIM;
-            } elseif(T_OPEN_TAG_WITH_ECHO === $i) {
-                // T_OPEN_TAG_WITH_ECHO with dropped T_OPEN_TAG results in T_ECHO
-                $tokenMap[$i] = Tokens::T_ECHO;
-            } elseif(T_CLOSE_TAG === $i) {
-                // T_CLOSE_TAG is equivalent to ';'
-                $tokenMap[$i] = ord(';');
-            } elseif ('UNKNOWN' !== $name = token_name($i)) {
-                if ('T_HASHBANG' === $name) {
-                    // HHVM uses a special token for #! hashbang lines
-                    $tokenMap[$i] = Tokens::T_INLINE_HTML;
-                } else if (defined($name = 'PhpParser\Parser\Tokens::' . $name)) {
-                    // Other tokens can be mapped directly
-                    $tokenMap[$i] = constant($name);
-                }
+                $followedByVarOrVarArg = isset($tokens[$next]) &&
+                    $tokens[$next]->is([\T_VARIABLE, \T_ELLIPSIS]);
+                $token->id = $followedByVarOrVarArg
+                    ? \T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG
+                    : \T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG;
             }
         }
 
-        // HHVM uses a special token for numbers that overflow to double
-        if (defined('T_ONUMBER')) {
-            $tokenMap[T_ONUMBER] = Tokens::T_DNUMBER;
-        }
-        // HHVM also has a separate token for the __COMPILER_HALT_OFFSET__ constant
-        if (defined('T_COMPILER_HALT_OFFSET')) {
-            $tokenMap[T_COMPILER_HALT_OFFSET] = Tokens::T_STRING;
+        // Check for unterminated comment
+        $lastToken = $tokens[$numTokens - 1];
+        if ($this->isUnterminatedComment($lastToken)) {
+            $errorHandler->handleError(new Error('Unterminated comment', [
+                'startLine' => $lastToken->line,
+                'endLine' => $lastToken->getEndLine(),
+                'startFilePos' => $lastToken->pos,
+                'endFilePos' => $lastToken->getEndPos(),
+            ]));
         }
 
-        return $tokenMap;
+        // Add sentinel token.
+        $tokens[] = new Token(0, "\0", $lastToken->getEndLine(), $lastToken->getEndPos());
     }
 }

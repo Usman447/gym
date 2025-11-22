@@ -39,28 +39,30 @@
                                 </div>
                             @endif
 
-                            {!! Form::Open(['url' => 'food/inventory/' . $inventoryItem->id, 'method' => 'PUT', 'id' => 'inventoryEditForm']) !!}
+                            <form action="{{ url('food/inventory/' . $inventoryItem->id) }}" method="POST" id="inventoryEditForm">
+                                @csrf
+                                @method('PUT')
                             
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('name', 'Name') !!}
-                                        {!! Form::text('name', $inventoryItem->name, ['class' => 'form-control', 'placeholder' => 'Enter inventory name', 'required']) !!}
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" value="{{ $inventoryItem->name }}" class="form-control" placeholder="Enter inventory name" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('amount', 'Amount') !!}
+                                        <label for="amount">Amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('amount', $inventoryItem->amount, ['class' => 'form-control', 'placeholder' => 'Enter amount', 'required']) !!}
+                                            <input type="text" name="amount" value="{{ $inventoryItem->amount }}" class="form-control" placeholder="Enter amount" required>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('quantity', 'Quantity') !!}
-                                        {!! Form::text('quantity', $inventoryItem->quantity, ['class' => 'form-control', 'placeholder' => 'Enter quantity', 'required']) !!}
+                                        <label for="quantity">Quantity</label>
+                                        <input type="text" name="quantity" value="{{ $inventoryItem->quantity }}" class="form-control" placeholder="Enter quantity" required>
                                     </div>
                                 </div>
                             </div>
@@ -68,13 +70,13 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        <a href="{{ action('InventoryController@index') }}" class="btn btn-default">Cancel</a>
+                                        <a href="{{ action('App\Http\Controllers\InventoryController@index') }}" class="btn btn-default">Cancel</a>
                                         <button type="submit" class="btn btn-primary active no-border">Update</button>
                                     </div>
                                 </div>
                             </div>
 
-                            {!! Form::Close() !!}
+                            </form>
                         </div>
                     </div>
                 </div>

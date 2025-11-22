@@ -2,13 +2,11 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class ChequeDetail extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use updatedByUser;
 
     protected $table = 'trn_cheque_details';

@@ -25,13 +25,33 @@ class GenericUser implements UserContract
     }
 
     /**
+     * Get the name of the unique identifier for the user.
+     *
+     * @return string
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'id';
+    }
+
+    /**
      * Get the unique identifier for the user.
      *
      * @return mixed
      */
     public function getAuthIdentifier()
     {
-        return $this->attributes['id'];
+        return $this->attributes[$this->getAuthIdentifierName()];
+    }
+
+    /**
+     * Get the name of the password attribute for the user.
+     *
+     * @return string
+     */
+    public function getAuthPasswordName()
+    {
+        return 'password';
     }
 
     /**
@@ -41,7 +61,7 @@ class GenericUser implements UserContract
      */
     public function getAuthPassword()
     {
-        return $this->attributes['password'];
+        return $this->attributes[$this->getAuthPasswordName()];
     }
 
     /**

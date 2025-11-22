@@ -11,11 +11,11 @@
                             <div class="panel-head font-size-20">Enter details of the service</div>
                         </div>
 
-                        {!! Form::model($service, ['method' => 'POST','action' => ['ServicesController@update',$service->id],'id'=>'servicesform']) !!}
+                        <form action="{{ action(['App\Http\Controllers\ServicesController@update', $service->id]) }}" method="POST" id="servicesform">
+                            @csrf
+                            @method('PUT')
 
                         @include('services.form',['submitButtonText' => 'Update'])
-
-                        {!! Form::Close() !!}
 
                         </form>
 

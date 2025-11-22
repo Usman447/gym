@@ -27,7 +27,8 @@
                             <div class="panel-head font-size-20">Enter details of the message</div>
                         </div>
 
-                        {!! Form::Open(['url' => 'sms/shoot','id'=>'sendform']) !!}
+                        <form action="{{ url('sms/shoot') }}" method="POST" id="sendform">
+                            @csrf
                         <?php
                         $count = collect(array_filter(explode(',', \Utilities::getSetting('sender_id_list'))))->count();
                         $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
@@ -37,7 +38,7 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('send_to','Send To') !!} </br>
+                                        <label for="send_to">Send To</label> </br>
                                         <div class="checkbox checkbox-theme display-inline-block">
                                             <input type="checkbox" name="send[]" id="activeMembers" value="0">
                                             <label for="activeMembers" class="padding-left-30">Active members</label>
@@ -68,7 +69,7 @@
 
                             @if($count == 1)
 
-                                {!! Form::hidden('sender_id',\Utilities::getSetting('sms_sender_id')) !!}
+                                <input type="hidden" name="sender_id" value="{{ \Utilities::getSetting('sms_sender_id') }}">
 
                             @elseif($count > 1)
 
@@ -90,8 +91,8 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group" id="customcontactsdiv">
-                                        {!! Form::label('customcontacts','Contact numbers') !!}
-                                        {!! Form::text('customcontacts',null,['class'=>'form-control tokenfield', 'id' => 'customcontacts', 'placeholder' => 'Type 10 digit contact numbers and hit enter']) !!}
+                                        <label for="customcontacts">Contact numbers</label>
+                                        <input type="text" name="customcontacts" value="" class="form-control tokenfield" id="customcontacts" placeholder="Type 10 digit contact numbers and hit enter">
                                     </div>
                                 </div>
                             </div>
@@ -99,8 +100,8 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('message','Message text') !!}
-                                        {!! Form::textarea('message',null,['class'=>'form-control', 'id' => 'message','rows' => '5']) !!}
+                                        <label for="message">Message text</label>
+                                        <textarea name="message" class="form-control" id="message" rows="5"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -108,13 +109,13 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::submit('Send Now', ['class' => 'btn btn-primary pull-right']) !!}
+                                        <button type="submit" class="btn btn-primary pull-right">Send Now</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {!! Form::Close() !!}
+                        </form>
 
                     </div>
                 </div>

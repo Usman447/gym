@@ -4,6 +4,7 @@ namespace Laracasts\Utilities\JavaScript;
 
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
+use Laracasts\Utilities\JavaScript\Transformers\Transformer;
 
 class JavaScriptServiceProvider extends ServiceProvider
 {
@@ -15,16 +16,15 @@ class JavaScriptServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('JavaScript', function ($app) {
-            $view = config('javascript.bind_js_vars_to_this_view');
-            $namespace = config('javascript.js_namespace');
-
-            $binder = new LaravelViewBinder($app['events'], $view);
-
-            return new PHPToJavaScriptTransformer($binder, $namespace);
+            return new Transformer(
+                new LaravelViewBinder($app['events'], config('javascript.bind_js_vars_to_this_view')),
+                config('javascript.js_namespace')
+            );
         });
 
         $this->mergeConfigFrom(
-            __DIR__ . '/config/javascript.php', 'javascript'
+            __DIR__ . '/config/javascript.php',
+            'javascript'
         );
     }
 
@@ -37,10 +37,13 @@ class JavaScriptServiceProvider extends ServiceProvider
             __DIR__ . '/config/javascript.php' => config_path('javascript.php')
         ]);
 
-        AliasLoader::getInstance()->alias(
-            'JavaScript',
-            'Laracasts\Utilities\JavaScript\JavaScriptFacade'
-        );
+        if (class_exists('Illuminate\Foundation\AliasLoader')) {
+            AliasLoader::getInstance()->alias(
+                'JavaScript',
+                'Laracasts\Utilities\JavaScript\JavaScriptFacade'
+            );
+        } else {
+            class_alias('Laracasts\Utilities\JavaScript\JavaScriptFacade', 'JavaScript');
+        }
     }
-
 }

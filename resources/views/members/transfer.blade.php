@@ -20,10 +20,11 @@
                 </div>
             @endif
 
-            {!! Form::Open(['url' => 'members','id'=>'membersform','files'=>'true']) !!}
-            {!! Form::hidden('transfer_id',$enquiry->id) !!}
-            {!! Form::hidden('memberCounter',$memberCounter) !!}
-            {!! Form::hidden('invoiceCounter',$invoiceCounter) !!}
+            <form action="{{ url('members') }}" method="POST" id="membersform" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="transfer_id" value="{{ $enquiry->id }}">
+                <input type="hidden" name="memberCounter" value="{{ $memberCounter }}">
+                <input type="hidden" name="invoiceCounter" value="{{ $invoiceCounter }}">
         <!-- Member Details -->
             <div class="row">
                 <div class="col-md-12">
@@ -36,30 +37,14 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('name','Name',['class'=>'control-label']) !!}
-                                        {!! Form::text('name',$enquiry->name,['class'=>'form-control', 'id' => 'name']) !!}
+                                        <label for="name" class="control-label">Name</label>
+                                        <input type="text" name="name" value="{{ $enquiry->name }}" class="form-control" id="name">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('photo','Photo') !!}
-                                        {!! Form::file('photo',['class'=>'form-control', 'id' => 'photo']) !!}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        {!! Form::label('DOB','Date Of Birth') !!}
-                                        {!! Form::text('DOB',$enquiry->DOB,['class'=>'form-control datepicker', 'id' => 'DOB']) !!}
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        {!! Form::label('gender','Gender') !!}
-                                        {!! Form::select('gender',array('m' => 'Male', 'f' => 'Female'),null,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'gender']) !!}
+                                        <label for="photo">Photo</label>
+                                        <input type="file" name="photo" class="form-control" id="photo">
                                     </div>
                                 </div>
                             </div>
@@ -67,14 +52,18 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('contact','Contact') !!}
-                                        {!! Form::text('contact',$enquiry->contact,['class'=>'form-control', 'id' => 'contact']) !!}
+                                        <label for="DOB">Date Of Birth</label>
+                                        <input type="text" name="DOB" value="{{ $enquiry->DOB }}" class="form-control datepicker" id="DOB">
                                     </div>
                                 </div>
+
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('email','Email') !!}
-                                        {!! Form::text('email',$enquiry->email,['class'=>'form-control', 'id' => 'email']) !!}
+                                        <label for="gender">Gender</label>
+                                        <select name="gender" class="form-control selectpicker show-tick show-menu-arrow" id="gender">
+                                            <option value="m">Male</option>
+                                            <option value="f">Female</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -82,29 +71,14 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('emergency_contact','Emergency contact') !!}
-                                        {!! Form::text('emergency_contact',null,['class'=>'form-control', 'id' => 'emergency_contact']) !!}
+                                        <label for="contact">Contact</label>
+                                        <input type="text" name="contact" value="{{ $enquiry->contact }}" class="form-control" id="contact">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('health_issues','Health issues') !!}
-                                        {!! Form::text('health_issues',null,['class'=>'form-control', 'id' => 'health_issues']) !!}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        {!! Form::label('proof_name','Proof Name') !!}
-                                        {!! Form::text('proof_name',null,['class'=>'form-control', 'id' => 'proof_name']) !!}
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        {!! Form::label('proof_photo','Proof Photo') !!}
-                                        {!! Form::file('proof_photo',['class'=>'form-control', 'id' => 'proof_photo']) !!}
+                                        <label for="email">Email</label>
+                                        <input type="text" name="email" value="{{ $enquiry->email }}" class="form-control" id="email">
                                     </div>
                                 </div>
                             </div>
@@ -112,15 +86,48 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('member_code','Member Code') !!}
-                                        {!! Form::text('member_code',$member_code,['class'=>'form-control', 'id' => 'member_code', ($member_number_mode == \constNumberingMode::Auto ? 'readonly' : '')]) !!}
+                                        <label for="emergency_contact">Emergency contact</label>
+                                        <input type="text" name="emergency_contact" value="" class="form-control" id="emergency_contact">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                    {!! Form::label('status','Status') !!}
+                                        <label for="health_issues">Health issues</label>
+                                        <input type="text" name="health_issues" value="" class="form-control" id="health_issues">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="proof_name">Proof Name</label>
+                                        <input type="text" name="proof_name" value="" class="form-control" id="proof_name">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="proof_photo">Proof Photo</label>
+                                        <input type="file" name="proof_photo" class="form-control" id="proof_photo">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="member_code">Member Code</label>
+                                        <input type="text" name="member_code" value="{{ $member_code }}" class="form-control" id="member_code" {{ $member_number_mode == \constNumberingMode::Auto ? 'readonly' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                    <label for="status">Status</label>
                                     <!--0 for inactive , 1 for active-->
-                                        {!! Form::select('status',array('1' => 'Active', '0' => 'InActive'),null,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status']) !!}
+                                        <select name="status" class="form-control selectpicker show-tick show-menu-arrow" id="status">
+                                            <option value="1">Active</option>
+                                            <option value="0">InActive</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -128,14 +135,21 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('pin_code','Pin Code',['class'=>'control-label']) !!}
-                                        {!! Form::text('pin_code',$enquiry->pin_code,['class'=>'form-control', 'id' => 'pin_code']) !!}
+                                        <label for="pin_code" class="control-label">Pin Code</label>
+                                        <input type="text" name="pin_code" value="{{ $enquiry->pin_code }}" class="form-control" id="pin_code">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('occupation','Occupation') !!}
-                                        {!! Form::select('occupation',array('0' => 'Student', '1' => 'Housewife','2' => 'Self Employed','3' => 'Professional','4' => 'Freelancer','5' => 'Others'),null,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'occupation']) !!}
+                                        <label for="occupation">Occupation</label>
+                                        <select name="occupation" class="form-control selectpicker show-tick show-menu-arrow" id="occupation">
+                                            <option value="0">Student</option>
+                                            <option value="1">Housewife</option>
+                                            <option value="2">Self Employed</option>
+                                            <option value="3">Professional</option>
+                                            <option value="4">Freelancer</option>
+                                            <option value="5">Others</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -143,14 +157,25 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('aim','Why do you plan to join?',['class'=>'control-label']) !!}
-                                        {!! Form::select('aim',array('0' => 'Fitness', '1' => 'Networking', '2' => 'Body Building', '3' => 'Fatloss', '4' => 'Weightgain', '5' => 'Others'),$enquiry->aim,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'aim']) !!}
+                                        <label for="aim" class="control-label">Why do you plan to join?</label>
+                                        <select name="aim" class="form-control selectpicker show-tick show-menu-arrow" id="aim">
+                                            <option value="0" {{ $enquiry->aim == '0' ? 'selected' : '' }}>Fitness</option>
+                                            <option value="1" {{ $enquiry->aim == '1' ? 'selected' : '' }}>Networking</option>
+                                            <option value="2" {{ $enquiry->aim == '2' ? 'selected' : '' }}>Body Building</option>
+                                            <option value="3" {{ $enquiry->aim == '3' ? 'selected' : '' }}>Fatloss</option>
+                                            <option value="4" {{ $enquiry->aim == '4' ? 'selected' : '' }}>Weightgain</option>
+                                            <option value="5" {{ $enquiry->aim == '5' ? 'selected' : '' }}>Others</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('source','How do you came to know about us?',['class'=>'control-label']) !!}
-                                        {!! Form::select('source',array('0' => 'Promotions', '1' => 'Word Of Mouth', '2' => 'Others'),$enquiry->source,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'source']) !!}
+                                        <label for="source" class="control-label">How do you came to know about us?</label>
+                                        <select name="source" class="form-control selectpicker show-tick show-menu-arrow" id="source">
+                                            <option value="0" {{ $enquiry->source == '0' ? 'selected' : '' }}>Promotions</option>
+                                            <option value="1" {{ $enquiry->source == '1' ? 'selected' : '' }}>Word Of Mouth</option>
+                                            <option value="2" {{ $enquiry->source == '2' ? 'selected' : '' }}>Others</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -158,8 +183,8 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                        {!! Form::label('address','Address') !!}
-                                        {!! Form::textarea('address',$enquiry->address,['class'=>'form-control', 'id' => 'address']) !!}
+                                        <label for="address">Address</label>
+                                        <textarea name="address" class="form-control" id="address">{{ $enquiry->address }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -180,15 +205,15 @@
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-5">
-                                    {!! Form::label('plan_0','Plan') !!}
+                                    <label for="plan_0">Plan</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('start_date_0','Start Date') !!}
+                                    <label for="start_date_0">Start Date</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('end_date_0','End Date') !!}
+                                    <label for="end_date_0">End Date</label>
                                 </div>
 
                                 <div class="col-sm-1">
@@ -209,20 +234,20 @@
                                                 @endforeach
                                             </select>
                                             <div class="plan-price">
-                                                {!! Form::hidden('plan[0][price]','', array('id' => 'price_0')) !!}
+                                                <input type="hidden" name="plan[0][price]" value="" id="price_0">
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="col-sm-3">
                                         <div class="form-group plan-start-date">
-                                            {!! Form::text('plan[0][start_date]',Carbon::today()->format('Y-m-d'),['class'=>'form-control datepicker-startdate childStartDate', 'id' => 'start_date_0', 'data-row-id' => '0']) !!}
+                                            <input type="text" name="plan[0][start_date]" value="{{ Carbon::today()->format('Y-m-d') }}" class="form-control datepicker-startdate childStartDate" id="start_date_0" data-row-id="0">
                                         </div>
                                     </div>
 
                                     <div class="col-sm-3">
                                         <div class="form-group plan-end-date">
-                                            {!! Form::text('plan[0][end_date]',null,['class'=>'form-control childEndDate', 'id' => 'end_date_0', 'readonly' => 'readonly','data-row-id' => '0']) !!}
+                                            <input type="text" name="plan[0][end_date]" value="" class="form-control childEndDate" id="end_date_0" readonly="readonly" data-row-id="0">
                                         </div>
                                     </div>
 
@@ -261,37 +286,37 @@
                             <div class="row">
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('invoice_number','Invoice Number') !!}
-                                        {!! Form::text('invoice_number',$invoice_number,['class'=>'form-control', 'id' => 'invoice_number', ($invoice_number_mode == \constNumberingMode::Auto ? 'readonly' : '')]) !!}
+                                        <label for="invoice_number">Invoice Number</label>
+                                        <input type="text" name="invoice_number" value="{{ $invoice_number }}" class="form-control" id="invoice_number" {{ $invoice_number_mode == \constNumberingMode::Auto ? 'readonly' : '' }}>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('admission_amount','Admission') !!}
+                                        <label for="admission_amount">Admission</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('admission_amount',Utilities::getSetting('admission_fee'),['class'=>'form-control', 'id' => 'admission_amount']) !!}
+                                            <input type="text" name="admission_amount" value="{{ Utilities::getSetting('admission_fee') }}" class="form-control" id="admission_amount">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('subscription_amount','Gym subscription fee') !!}
+                                        <label for="subscription_amount">Gym subscription fee</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('subscription_amount',null,['class'=>'form-control', 'id' => 'subscription_amount','readonly' => 'readonly']) !!}
+                                            <input type="text" name="subscription_amount" value="" class="form-control" id="subscription_amount" readonly="readonly">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('taxes_amount',sprintf('Tax @ %s %%',Utilities::getSetting('taxes'))) !!}
+                                        <label for="taxes_amount">{{ sprintf('Tax @ %s %%',Utilities::getSetting('taxes')) }}</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('taxes_amount',0,['class'=>'form-control', 'id' => 'taxes_amount','readonly' => 'readonly']) !!}
+                                            <input type="text" name="taxes_amount" value="0" class="form-control" id="taxes_amount" readonly="readonly">
                                         </div>
                                     </div>
                                 </div>
@@ -300,7 +325,7 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_percent','Discount') !!}
+                                        <label for="discount_percent">Discount</label>
                                         <?php
                                         $discounts = explode(",", str_replace(" ", "", (Utilities::getSetting('discounts'))));
                                         $discounts_list = array_combine($discounts, $discounts);
@@ -316,17 +341,17 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_amount','Discount amount') !!}
+                                        <label for="discount_amount">Discount amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('discount_amount',null,['class'=>'form-control', 'id' => 'discount_amount','readonly' => 'readonly']) !!}
+                                            <input type="text" name="discount_amount" value="" class="form-control" id="discount_amount" readonly="readonly">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_note','Discount note') !!}
-                                        {!! Form::text('discount_note',null,['class'=>'form-control', 'id' => 'discount_note']) !!}
+                                        <label for="discount_note">Discount note</label>
+                                        <input type="text" name="discount_note" value="" class="form-control" id="discount_note">
                                     </div>
                                 </div>
                             </div>
@@ -349,20 +374,20 @@
                             <div class="row">
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('payment_amount','Amount Received') !!}
+                                        <label for="payment_amount">Amount Received</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('payment_amount',null,['class'=>'form-control', 'id' => 'payment_amount', 'data-amounttotal' => '0']) !!}
+                                            <input type="text" name="payment_amount" value="" class="form-control" id="payment_amount" data-amounttotal="0">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('payment_amount_pending','Amount Pending') !!}
+                                        <label for="payment_amount_pending">Amount Pending</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('payment_amount_pending',null,['class'=>'form-control', 'id' => 'payment_amount_pending', 'readonly']) !!}
+                                            <input type="text" name="payment_amount_pending" value="" class="form-control" id="payment_amount_pending" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -370,23 +395,26 @@
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('mode','Mode') !!}
-                                        {!! Form::select('mode',array('1' => 'Cash', '0' => 'Cheque'),1,['class'=>'form-control selectpicker show-tick', 'id' => 'mode']) !!}
+                                        <label for="mode">Mode</label>
+                                        <select name="mode" class="form-control selectpicker show-tick" id="mode">
+                                            <option value="1" selected>Cash</option>
+                                            <option value="0">Cheque</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div> <!-- /Row -->
                             <div class="row" id="chequeDetails">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('number','Cheque number') !!}
-                                        {!! Form::text('number',null,['class'=>'form-control', 'id' => 'number']) !!}
+                                        <label for="number">Cheque number</label>
+                                        <input type="text" name="number" value="" class="form-control" id="number">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('date','Cheque date') !!}
-                                        {!! Form::text('date',null,['class'=>'form-control datepicker-default', 'id' => 'date']) !!}
+                                        <label for="date">Cheque date</label>
+                                        <input type="text" name="date" value="" class="form-control datepicker-default" id="date">
                                     </div>
                                 </div>
                             </div>
@@ -401,12 +429,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Create</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
         </div> <!-- content -->
     </div> <!-- rightside -->

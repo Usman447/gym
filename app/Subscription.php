@@ -3,13 +3,11 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Subscription extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $table = 'trn_subscriptions';
@@ -26,16 +24,17 @@ class Subscription extends Model
         'updated_by',
     ];
 
-    protected $dates = ['created_at', 'updated_at', 'start_date', 'end_date'];
-
-    protected $searchableColumns = [
-        'Member.member_code' => 20,
-        'start_date' => 20,
-        'end_date' => 20,
-        'Member.name' => 20,
-        'Plan.plan_name' => 20,
-        'Invoice.invoice_number' => 20,
+    protected $dates = ['created_at', 'updated_at'];
+    
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    // Removed $searchableColumns - was part of deprecated Sofa\Eloquence package
+    // Search functionality is now handled by scopeSearch method
 
     public function scopeDashboardExpiring($query)
     {
@@ -107,6 +106,27 @@ class Subscription extends Model
     public function invoice()
     {
         return $this->belongsTo('App\Invoice', 'invoice_id');
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     * Note: This assumes the query already has the plan join from indexQuery
+     * For member/invoice searches, the controller should add those joins
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('trn_subscriptions.start_date', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('trn_subscriptions.end_date', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('mst_plans.plan_name', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 
     /**

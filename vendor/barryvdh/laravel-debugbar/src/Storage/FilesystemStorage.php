@@ -33,7 +33,7 @@ class FilesystemStorage implements StorageInterface
     {
         if (!$this->files->isDirectory($this->dirname)) {
             if ($this->files->makeDirectory($this->dirname, 0777, true)) {
-                $this->files->put($this->dirname . '.gitignore', "*\n!.gitignore");
+                $this->files->put($this->dirname . '.gitignore', "*\n!.gitignore\n");
             } else {
                 throw new \Exception("Cannot create directory '$this->dirname'..");
             }
@@ -63,13 +63,15 @@ class FilesystemStorage implements StorageInterface
     }
 
     /**
-     * Delete files older then a certain age (gc_lifetime)
+     * Delete files older than a certain age (gc_lifetime)
      */
     protected function garbageCollect()
     {
-        foreach (Finder::create()->files()->name('*.json')->date('< ' . $this->gc_lifetime . ' hour ago')->in(
-            $this->dirname
-        ) as $file) {
+        foreach (
+            Finder::create()->files()->name('*.json')->date('< ' . $this->gc_lifetime . ' hour ago')->in(
+                $this->dirname
+            ) as $file
+        ) {
             $this->files->delete($file->getRealPath());
         }
     }
@@ -79,7 +81,12 @@ class FilesystemStorage implements StorageInterface
      */
     public function get($id)
     {
-        return json_decode($this->files->get($this->makeFilename($id)), true);
+        $fileName = $this->makeFilename($id);
+        if (!$this->files->exists($fileName)) {
+            return [];
+        }
+
+        return json_decode($this->files->get($fileName), true);
     }
 
     /**

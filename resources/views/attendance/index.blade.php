@@ -37,28 +37,24 @@
 
                                 <div class="row">
                                     <div class="col-sm-12 no-padding">
-                                        {!! Form::Open(['method' => 'GET']) !!}
+                                        <form method="GET">
 
                                         <div class="col-sm-6">
-                                            {!! Form::label('date','Sort By Date') !!}
-                                            {!! Form::text('date', $selectedDate, [
-                                                'class' => 'form-control datepicker-default', 
-                                                'id' => 'date',
-                                                'placeholder' => 'Select date'
-                                            ]) !!}
+                                            <label for="date">Sort By Date</label>
+                                            <input type="text" name="date" value="{{ $selectedDate }}" class="form-control datepicker-default" id="date" placeholder="Select date">
                                         </div>
 
                                         <div class="col-xs-6">
-                                            {!! Form::label('search','Keyword Search') !!}
+                                            <label for="search">Keyword Search</label>
                                             <input value="{{ old('search') }}" name="search" id="search" type="text" class="form-control padding-right-35" placeholder="Search by member name or code...">
                                         </div>
 
                                         <div class="col-xs-2">
-                                            {!! Form::label('&nbsp;') !!} <br/>
+                                            <label>&nbsp;</label> <br/>
                                             <button type="submit" class="btn btn-primary active no-border">GO</button>
                                         </div>
 
-                                        {!! Form::Close() !!}
+                                        </form>
                                     </div>
                                 </div>
 

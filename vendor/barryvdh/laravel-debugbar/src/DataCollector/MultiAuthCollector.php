@@ -2,17 +2,31 @@
 
 namespace Barryvdh\Debugbar\DataCollector;
 
+use DebugBar\DataCollector\DataCollector;
+use DebugBar\DataCollector\Renderable;
+use Illuminate\Auth\Recaller;
 use Illuminate\Auth\SessionGuard;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * Collector for Laravel's Auth provider
  */
-class MultiAuthCollector extends AuthCollector
+class MultiAuthCollector extends DataCollector implements Renderable
 {
     /** @var array $guards */
     protected $guards;
+
+    /** @var \Illuminate\Auth\AuthManager */
+    protected $auth;
+
+    /** @var bool */
+    protected $showName = false;
+
+    /** @var bool */
+    protected $showGuardsData = true;
 
     /**
      * @param \Illuminate\Auth\AuthManager $auth
@@ -20,30 +34,53 @@ class MultiAuthCollector extends AuthCollector
      */
     public function __construct($auth, $guards)
     {
-        parent::__construct($auth);
+        $this->auth = $auth;
         $this->guards = $guards;
     }
 
+    /**
+     * Set to show the users name/email
+     * @param bool $showName
+     */
+    public function setShowName($showName)
+    {
+        $this->showName = (bool) $showName;
+    }
+
+    /**
+     * Set to hide the guards tab, and show only name
+     * @param bool $showGuardsData
+     */
+    public function setShowGuardsData($showGuardsData)
+    {
+        $this->showGuardsData = (bool) $showGuardsData;
+    }
 
     /**
      * @{inheritDoc}
      */
     public function collect()
     {
-        $data = [];
+        $data = [
+            'guards' => [],
+        ];
         $names = '';
 
-        foreach($this->guards as $guardName) {
+        foreach ($this->guards as $guardName => $config) {
             try {
-                $user = $this->resolveUser($this->auth->guard($guardName));
+                $guard = $this->auth->guard($guardName);
+                if ($this->hasUser($guard)) {
+                    $user = $guard->user();
+
+                    if (!is_null($user)) {
+                        $data['guards'][$guardName] = $this->getUserInformation($user);
+                        $names .= $guardName . ": " . $data['guards'][$guardName]['name'] . ', ';
+                    }
+                } else {
+                    $data['guards'][$guardName] = null;
+                }
             } catch (\Exception $e) {
                 continue;
-            }
-
-            $data['guards'][$guardName] = $this->getUserInformation($user);
-
-            if(!is_null($user)) {
-                $names .= $guardName . ": " . $data['guards'][$guardName]['name'] . ', ';
             }
         }
 
@@ -54,27 +91,65 @@ class MultiAuthCollector extends AuthCollector
         }
 
         $data['names'] = rtrim($names, ', ');
+        if (!$this->showGuardsData) {
+            unset($data['guards']);
+        }
 
         return $data;
     }
 
-    private function resolveUser(Guard $guard)
+    private function hasUser(Guard $guard)
     {
-        // if we're logging in using remember token
-        // then we must resolve user „manually”
-        // to prevent csrf token regeneration
+        if (method_exists($guard, 'hasUser')) {
+            return $guard->hasUser();
+        }
 
-        $recaller = $guard instanceof SessionGuard
-            ? $guard->getRequest()->cookies->get($guard->getRecallerName())
-            : null;
+        return false;
+    }
 
-        if (is_string($recaller) && Str::contains($recaller, '|')) {
-            $segments = explode('|', $recaller);
-            if (count($segments) == 2 && trim($segments[0]) !== '' && trim($segments[1]) !== '') {
-                return $guard->getProvider()->retrieveByToken($segments[0], $segments[1]);
+    /**
+     * Get displayed user information
+     * @param \Illuminate\Auth\UserInterface $user
+     * @return array
+     */
+    protected function getUserInformation($user = null)
+    {
+        // Defaults
+        if (is_null($user)) {
+            return [
+                'name' => 'Guest',
+                'user' => ['guest' => true],
+            ];
+        }
+
+        // The default auth identifer is the ID number, which isn't all that
+        // useful. Try username, email and name.
+        $identifier = $user instanceof Authenticatable ? $user->getAuthIdentifier() : $user->getKey();
+        if (is_numeric($identifier) || Str::isUuid($identifier) || Str::isUlid($identifier)) {
+            try {
+                if (isset($user->username)) {
+                    $identifier = $user->username;
+                } elseif (isset($user->email)) {
+                    $identifier = $user->email;
+                } elseif (isset($user->name)) {
+                    $identifier = Str::limit($user->name, 24);
+                }
+            } catch (\Throwable $e) {
             }
         }
-        return $guard->user();
+
+        return [
+            'name' => $identifier,
+            'user' => $user instanceof Arrayable ? $user->toArray() : $user,
+        ];
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    public function getName()
+    {
+        return 'auth';
     }
 
     /**
@@ -82,14 +157,16 @@ class MultiAuthCollector extends AuthCollector
      */
     public function getWidgets()
     {
-        $widgets = [
-            "auth" => [
+        $widgets = [];
+
+        if ($this->showGuardsData) {
+            $widgets["auth"] = [
                 "icon" => "lock",
                 "widget" => "PhpDebugBar.Widgets.VariableListWidget",
                 "map" => "auth.guards",
-                "default" => "{}"
-            ]
-        ];
+                "default" => "{}",
+            ];
+        }
 
         if ($this->showName) {
             $widgets['auth.name'] = [

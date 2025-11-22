@@ -6,15 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Spatie\\Glide' => array($vendorDir . '/spatie/laravel-glide/src'),
-    'Sentry\\SentryLaravel\\' => array($vendorDir . '/sentry/sentry-laravel/src'),
-    'Raven_' => array($vendorDir . '/sentry/sentry/lib'),
     'Rap2hpoutre\\LaravelLogViewer\\' => array($vendorDir . '/rap2hpoutre/laravel-log-viewer/src'),
-    'Prophecy\\' => array($vendorDir . '/phpspec/prophecy/src'),
-    'PhpSpec' => array($vendorDir . '/phpspec/phpspec/src'),
-    'Mockery' => array($vendorDir . '/mockery/mockery/library'),
     'Laracasts\\Flash' => array($vendorDir . '/laracasts/flash/src'),
-    'JakubOnderka\\PhpConsoleHighlighter' => array($vendorDir . '/jakub-onderka/php-console-highlighter/src'),
-    'Dotenv' => array($vendorDir . '/vlucas/phpdotenv/src'),
-    'Diff' => array($vendorDir . '/phpspec/php-diff/lib'),
 );

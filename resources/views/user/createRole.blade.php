@@ -23,28 +23,29 @@
                             <div class="panel-head">Enter Details of the role</div>
                         </div>
 
-                        {!! Form::Open(['url' => 'user/role','id' => 'rolesform','files'=>'true']) !!}
+                        <form action="{{ url('user/role') }}" method="POST" id="rolesform" enctype="multipart/form-data">
+                            @csrf
 
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('name','Role Name') !!}
-                                        {!! Form::text('name',null,['class'=>'form-control', 'id' => 'name']) !!}
+                                        <label for="name">Role Name</label>
+                                        <input type="text" name="name" value="{{ old('name') }}" class="form-control" id="name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('display_name','Display Name') !!}
-                                        {!! Form::text('display_name',null,['class'=>'form-control', 'id' => 'display_name']) !!}
+                                        <label for="display_name">Display Name</label>
+                                        <input type="text" name="display_name" value="{{ old('display_name') }}" class="form-control" id="display_name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('description','Description') !!}
-                                        {!! Form::text('description',null,['class'=>'form-control', 'id' => 'description']) !!}
+                                        <label for="description">Description</label>
+                                        <input type="text" name="description" value="{{ old('description') }}" class="form-control" id="description">
                                     </div>
                                 </div>
                             </div>
@@ -77,12 +78,12 @@
                     <div class="row">
                         <div class="col-sm-2 pull-right">
                             <div class="form-group">
-                                {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                                <button type="submit" class="btn btn-primary pull-right">Create</button>
                             </div>
                         </div>
                     </div>
 
-                    {!! Form::Close() !!}
+                    </form>
 
 
                 </div>

@@ -18,23 +18,59 @@ namespace Symfony\Component\VarDumper\Cloner;
  */
 class Stub
 {
-    const TYPE_REF = 'ref';
-    const TYPE_STRING = 'string';
-    const TYPE_ARRAY = 'array';
-    const TYPE_OBJECT = 'object';
-    const TYPE_RESOURCE = 'resource';
+    public const TYPE_REF = 1;
+    public const TYPE_STRING = 2;
+    public const TYPE_ARRAY = 3;
+    public const TYPE_OBJECT = 4;
+    public const TYPE_RESOURCE = 5;
+    public const TYPE_SCALAR = 6;
 
-    const STRING_BINARY = 'bin';
-    const STRING_UTF8 = 'utf8';
+    public const STRING_BINARY = 1;
+    public const STRING_UTF8 = 2;
 
-    const ARRAY_ASSOC = 'assoc';
-    const ARRAY_INDEXED = 'indexed';
+    public const ARRAY_ASSOC = 1;
+    public const ARRAY_INDEXED = 2;
 
-    public $type = self::TYPE_REF;
-    public $class = '';
-    public $value;
-    public $cut = 0;
-    public $handle = 0;
-    public $refCount = 0;
-    public $position = 0;
+    public int $type = self::TYPE_REF;
+    public string|int|null $class = '';
+    public mixed $value = null;
+    public int $cut = 0;
+    public int $handle = 0;
+    public int $refCount = 0;
+    public int $position = 0;
+    public array $attr = [];
+
+    /**
+     * @internal
+     */
+    protected static array $propertyDefaults = [];
+
+    public function __serialize(): array
+    {
+        static $noDefault = new \stdClass();
+
+        if (self::class === static::class) {
+            $data = [];
+            foreach ($this as $k => $v) {
+                $default = self::$propertyDefaults[$this::class][$k] ??= ($p = new \ReflectionProperty($this, $k))->hasDefaultValue() ? $p->getDefaultValue() : ($p->hasType() ? $noDefault : null);
+                if ($noDefault === $default || $default !== $v) {
+                    $data[$k] = $v;
+                }
+            }
+
+            return $data;
+        }
+
+        return \Closure::bind(function () use ($noDefault) {
+            $data = [];
+            foreach ($this as $k => $v) {
+                $default = self::$propertyDefaults[$this::class][$k] ??= ($p = new \ReflectionProperty($this, $k))->hasDefaultValue() ? $p->getDefaultValue() : ($p->hasType() ? $noDefault : null);
+                if ($noDefault === $default || $default !== $v) {
+                    $data[$k] = $v;
+                }
+            }
+
+            return $data;
+        }, $this, $this::class)();
+    }
 }

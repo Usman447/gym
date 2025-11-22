@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
@@ -28,7 +27,6 @@ class Invoice extends Model
     protected $dates = ['created_at', 'updated_at'];
 
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $searchableColumns = [
@@ -75,5 +73,27 @@ class Invoice extends Model
     public static function sumOutstanding()
     {
         return static::whereIn('status', [\constPaymentStatus::Unpaid, \constPaymentStatus::Partial])->sum('pending_amount');
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     * Note: This assumes the query already has the member join from indexQuery
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('trn_invoice.invoice_number', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('trn_invoice.total', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('trn_invoice.pending_amount', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('mst_members.name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('mst_members.member_code', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

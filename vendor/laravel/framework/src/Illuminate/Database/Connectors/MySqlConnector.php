@@ -2,6 +2,8 @@
 
 namespace Illuminate\Database\Connectors;
 
+use PDO;
+
 class MySqlConnector extends Connector implements ConnectorInterface
 {
     /**
@@ -21,42 +23,13 @@ class MySqlConnector extends Connector implements ConnectorInterface
         // connection's behavior, and some might be specified by the developers.
         $connection = $this->createConnection($dsn, $config, $options);
 
-        if (isset($config['unix_socket'])) {
+        if (! empty($config['database']) &&
+            (! isset($config['use_db_after_connecting']) ||
+             $config['use_db_after_connecting'])) {
             $connection->exec("use `{$config['database']}`;");
         }
 
-        $collation = $config['collation'];
-
-        // Next we will set the "names" and "collation" on the clients connections so
-        // a correct character set will be used by this client. The collation also
-        // is set on the server but needs to be set here on this client objects.
-        if (isset($config['charset'])) {
-            $charset = $config['charset'];
-
-            $names = "set names '$charset'".
-                (! is_null($collation) ? " collate '$collation'" : '');
-
-            $connection->prepare($names)->execute();
-        }
-        // Next, we will check to see if a timezone has been specified in this config
-        // and if it has we will issue a statement to modify the timezone with the
-        // database. Setting this DB timezone is an optional configuration item.
-        if (isset($config['timezone'])) {
-            $connection->prepare(
-                'set time_zone="'.$config['timezone'].'"'
-            )->execute();
-        }
-
-        // If the "strict" option has been configured for the connection we will setup
-        // strict mode for this session. Strict mode enforces some extra rules when
-        // using the MySQL database system and is a quicker way to enforce them.
-        if (isset($config['strict'])) {
-            if ($config['strict']) {
-                $connection->prepare("set session sql_mode='STRICT_ALL_TABLES'")->execute();
-            } else {
-                $connection->prepare("set session sql_mode=''")->execute();
-            }
-        }
+        $this->configureConnection($connection, $config);
 
         return $connection;
     }
@@ -66,12 +39,14 @@ class MySqlConnector extends Connector implements ConnectorInterface
      *
      * Chooses socket or host/port based on the 'unix_socket' config value.
      *
-     * @param  array   $config
+     * @param  array  $config
      * @return string
      */
     protected function getDsn(array $config)
     {
-        return $this->configHasSocket($config) ? $this->getSocketDsn($config) : $this->getHostDsn($config);
+        return $this->hasSocket($config)
+                            ? $this->getSocketDsn($config)
+                            : $this->getHostDsn($config);
     }
 
     /**
@@ -80,7 +55,7 @@ class MySqlConnector extends Connector implements ConnectorInterface
      * @param  array  $config
      * @return bool
      */
-    protected function configHasSocket(array $config)
+    protected function hasSocket(array $config)
     {
         return isset($config['unix_socket']) && ! empty($config['unix_socket']);
     }
@@ -104,10 +79,76 @@ class MySqlConnector extends Connector implements ConnectorInterface
      */
     protected function getHostDsn(array $config)
     {
-        extract($config, EXTR_SKIP);
+        return isset($config['port'])
+                    ? "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']}"
+                    : "mysql:host={$config['host']};dbname={$config['database']}";
+    }
 
-        return isset($port)
-                        ? "mysql:host={$host};port={$port};dbname={$database}"
-                        : "mysql:host={$host};dbname={$database}";
+    /**
+     * Configure the given PDO connection.
+     *
+     * @param  \PDO  $connection
+     * @param  array  $config
+     * @return void
+     */
+    protected function configureConnection(PDO $connection, array $config)
+    {
+        if (isset($config['isolation_level'])) {
+            $connection->exec(sprintf('SET SESSION TRANSACTION ISOLATION LEVEL %s;', $config['isolation_level']));
+        }
+
+        $statements = [];
+
+        if (isset($config['charset'])) {
+            if (isset($config['collation'])) {
+                $statements[] = sprintf("NAMES '%s' COLLATE '%s'", $config['charset'], $config['collation']);
+            } else {
+                $statements[] = sprintf("NAMES '%s'", $config['charset']);
+            }
+        }
+
+        if (isset($config['timezone'])) {
+            $statements[] = sprintf("time_zone='%s'", $config['timezone']);
+        }
+
+        $sqlMode = $this->getSqlMode($connection, $config);
+
+        if ($sqlMode !== null) {
+            $statements[] = sprintf("SESSION sql_mode='%s'", $sqlMode);
+        }
+
+        if ($statements !== []) {
+            $connection->exec(sprintf('SET %s;', implode(', ', $statements)));
+        }
+    }
+
+    /**
+     * Get the sql_mode value.
+     *
+     * @param  \PDO  $connection
+     * @param  array  $config
+     * @return string|null
+     */
+    protected function getSqlMode(PDO $connection, array $config)
+    {
+        if (isset($config['modes'])) {
+            return implode(',', $config['modes']);
+        }
+
+        if (! isset($config['strict'])) {
+            return null;
+        }
+
+        if (! $config['strict']) {
+            return 'NO_ENGINE_SUBSTITUTION';
+        }
+
+        $version = $config['version'] ?? $connection->getAttribute(PDO::ATTR_SERVER_VERSION);
+
+        if (version_compare($version, '8.0.11') >= 0) {
+            return 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+        }
+
+        return 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
     }
 }

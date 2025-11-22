@@ -23,28 +23,30 @@
                             <div class="panel-head">Enter Details of the Role</div>
                         </div>
 
-                        {!! Form::Open(['method' => 'POST','id' => 'rolesform','action' => ['AclController@updateRole',$role->id]]) !!}
+                        <form action="{{ action(['App\Http\Controllers\AclController@updateRole', $role->id]) }}" method="POST" id="rolesform">
+                            @csrf
+                            @method('PUT')
 
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('name','Name') !!}
-                                        {!! Form::text('name',$role->name,['class'=>'form-control', 'id' => 'name']) !!}
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" value="{{ old('name', $role->name) }}" class="form-control" id="name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('display_name','Display name') !!}
-                                        {!! Form::text('display_name',$role->display_name,['class'=>'form-control', 'id' => 'display_name']) !!}
+                                        <label for="display_name">Display name</label>
+                                        <input type="text" name="display_name" value="{{ old('display_name', $role->display_name) }}" class="form-control" id="display_name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('description','Description') !!}
-                                        {!! Form::text('description',$role->description,['class'=>'form-control', 'id' => 'description']) !!}
+                                        <label for="description">Description</label>
+                                        <input type="text" name="description" value="{{ old('description', $role->description) }}" class="form-control" id="description">
                                     </div>
                                 </div>
                             </div>
@@ -77,12 +79,12 @@
                     <div class="row">
                         <div class="col-sm-2 pull-right">
                             <div class="form-group">
-                                {!! Form::submit('Update', ['class' => 'btn btn-primary pull-right']) !!}
+                                <button type="submit" class="btn btn-primary pull-right">Update</button>
                             </div>
                         </div>
                     </div>
 
-                    {!! Form::Close() !!}
+                    </form>
 
 
                 </div>

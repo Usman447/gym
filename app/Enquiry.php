@@ -2,13 +2,11 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Enquiry extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $table = 'mst_enquiries';
@@ -66,5 +64,24 @@ class Enquiry extends Model
     public function scopeOnlyLeads($query)
     {
         return $query->where('status', '=', \constEnquiryStatus::Lead)->orderBy('created_at', 'desc')->take(10);
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('contact', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

@@ -25,11 +25,12 @@
                             <div class="panel-head font-size-20">Enter details of the plan</div>
                         </div>
 
-                        {!! Form::Open(['url' => 'plans','id'=>'plansform']) !!}
+                        <form action="{{ url('plans') }}" method="POST" id="plansform">
+                            @csrf
 
                         @include('plans.form',['submitButtonText' => 'Add'])
 
-                        {!! Form::Close() !!}
+                        </form>
 
                     </div>
                 </div>

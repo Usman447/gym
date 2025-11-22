@@ -2,13 +2,11 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $table = 'mst_services';

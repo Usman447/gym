@@ -8,7 +8,7 @@ if (!function_exists('debugbar')) {
      */
     function debugbar()
     {
-        return app('debugbar');
+        return app(\Barryvdh\Debugbar\LaravelDebugbar::class);
     }
 }
 
@@ -21,7 +21,7 @@ if (!function_exists('debug')) {
      */
     function debug($value)
     {
-        $debugbar = app('debugbar');
+        $debugbar = debugbar();
         foreach (func_get_args() as $value) {
             $debugbar->addMessage($value, 'debug');
         }
@@ -37,7 +37,7 @@ if (!function_exists('start_measure')) {
      */
     function start_measure($name, $label = null)
     {
-        app('debugbar')->startMeasure($name, $label);
+        debugbar()->startMeasure($name, $label);
     }
 }
 
@@ -49,7 +49,7 @@ if (!function_exists('stop_measure')) {
      */
     function stop_measure($name)
     {
-        app('debugbar')->stopMeasure($name);
+        debugbar()->stopMeasure($name);
     }
 }
 
@@ -63,7 +63,7 @@ if (!function_exists('add_measure')) {
      */
     function add_measure($label, $start, $end)
     {
-        app('debugbar')->addMeasure($label, $start, $end);
+        debugbar()->addMeasure($label, $start, $end);
     }
 }
 
@@ -73,9 +73,10 @@ if (!function_exists('measure')) {
      *
      * @param string $label
      * @param \Closure $closure
+     * @return mixed
      */
     function measure($label, \Closure $closure)
     {
-        app('debugbar')->measure($label, $closure);
+        return debugbar()->measure($label, $closure);
     }
 }

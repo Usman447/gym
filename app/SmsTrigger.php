@@ -2,13 +2,11 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class SmsTrigger extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     const CREATED_AT = null;

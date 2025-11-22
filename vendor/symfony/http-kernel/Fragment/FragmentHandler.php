@@ -11,11 +11,11 @@
 
 namespace Symfony\Component\HttpKernel\Fragment;
 
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Controller\ControllerReference;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Renders a URI that represents a resource fragment.
@@ -23,62 +23,35 @@ use Symfony\Component\HttpKernel\Controller\ControllerReference;
  * This class handles the rendering of resource fragments that are included into
  * a main resource. The handling of the rendering is managed by specialized renderers.
  *
- * This listener works in 2 modes:
- *
- *  * 2.3 compatibility mode where you must call setRequest whenever the Request changes.
- *  * 2.4+ mode where you must pass a RequestStack instance in the constructor.
- *
  * @author Fabien Potencier <fabien@symfony.com>
  *
  * @see FragmentRendererInterface
  */
 class FragmentHandler
 {
-    private $debug;
-    private $renderers = array();
-    private $request;
-    private $requestStack;
+    /** @var array<string, FragmentRendererInterface> */
+    private array $renderers = [];
 
     /**
-     * RequestStack will become required in 3.0.
-     *
-     * @param FragmentRendererInterface[] $renderers    An array of FragmentRendererInterface instances
-     * @param bool                        $debug        Whether the debug mode is enabled or not
-     * @param RequestStack|null           $requestStack The Request stack that controls the lifecycle of requests
+     * @param FragmentRendererInterface[] $renderers An array of FragmentRendererInterface instances
+     * @param bool                        $debug     Whether the debug mode is enabled or not
      */
-    public function __construct(array $renderers = array(), $debug = false, RequestStack $requestStack = null)
-    {
-        $this->requestStack = $requestStack;
+    public function __construct(
+        private RequestStack $requestStack,
+        array $renderers = [],
+        private bool $debug = false,
+    ) {
         foreach ($renderers as $renderer) {
             $this->addRenderer($renderer);
         }
-        $this->debug = $debug;
     }
 
     /**
      * Adds a renderer.
      */
-    public function addRenderer(FragmentRendererInterface $renderer)
+    public function addRenderer(FragmentRendererInterface $renderer): void
     {
         $this->renderers[$renderer->getName()] = $renderer;
-    }
-
-    /**
-     * Sets the current Request.
-     *
-     * This method was used to synchronize the Request, but as the HttpKernel
-     * is doing that automatically now, you should never call it directly.
-     * It is kept public for BC with the 2.3 version.
-     *
-     * @param Request|null $request A Request instance
-     *
-     * @deprecated since version 2.4, to be removed in 3.0.
-     */
-    public function setRequest(Request $request = null)
-    {
-        @trigger_error('The '.__METHOD__.' method is deprecated since Symfony 2.4 and will be removed in 3.0.', E_USER_DEPRECATED);
-
-        $this->request = $request;
     }
 
     /**
@@ -88,26 +61,20 @@ class FragmentHandler
      *
      *  * ignore_errors: true to return an empty string in case of an error
      *
-     * @param string|ControllerReference $uri      A URI as a string or a ControllerReference instance
-     * @param string                     $renderer The renderer name
-     * @param array                      $options  An array of options
-     *
-     * @return string|null The Response content or null when the Response is streamed
-     *
      * @throws \InvalidArgumentException when the renderer does not exist
-     * @throws \LogicException           when no master request is being handled
+     * @throws \LogicException           when no main request is being handled
      */
-    public function render($uri, $renderer = 'inline', array $options = array())
+    public function render(string|ControllerReference $uri, string $renderer = 'inline', array $options = []): ?string
     {
         if (!isset($options['ignore_errors'])) {
             $options['ignore_errors'] = !$this->debug;
         }
 
         if (!isset($this->renderers[$renderer])) {
-            throw new \InvalidArgumentException(sprintf('The "%s" renderer does not exist.', $renderer));
+            throw new \InvalidArgumentException(\sprintf('The "%s" renderer does not exist.', $renderer));
         }
 
-        if (!$request = $this->getRequest()) {
+        if (!$request = $this->requestStack->getCurrentRequest()) {
             throw new \LogicException('Rendering a fragment can only be done when handling a Request.');
         }
 
@@ -124,10 +91,11 @@ class FragmentHandler
      *
      * @throws \RuntimeException when the Response is not successful
      */
-    protected function deliver(Response $response)
+    protected function deliver(Response $response): ?string
     {
         if (!$response->isSuccessful()) {
-            throw new \RuntimeException(sprintf('Error when rendering "%s" (Status code is %s).', $this->getRequest()->getUri(), $response->getStatusCode()));
+            $responseStatusCode = $response->getStatusCode();
+            throw new \RuntimeException(\sprintf('Error when rendering "%s" (Status code is %d).', $this->requestStack->getCurrentRequest()->getUri(), $responseStatusCode), 0, new HttpException($responseStatusCode));
         }
 
         if (!$response instanceof StreamedResponse) {
@@ -135,10 +103,7 @@ class FragmentHandler
         }
 
         $response->sendContent();
-    }
 
-    private function getRequest()
-    {
-        return $this->requestStack ? $this->requestStack->getCurrentRequest() : $this->request;
+        return null;
     }
 }

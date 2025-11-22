@@ -6,7 +6,9 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    {!! Form::model($member, ['method' => 'POST','files'=>'true','action' => ['MembersController@update',$member->id],'id'=>'membersform']) !!}
+                    <form action="{{ action([App\Http\Controllers\MembersController::class, 'update'], ['id' => $member->id]) }}" method="POST" id="membersform" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
 
 
                     <div class="panel no-border">
@@ -22,12 +24,12 @@
                     <div class="row">
                         <div class="col-sm-2 pull-right">
                             <div class="form-group">
-                                {!! Form::submit('Update', ['class' => 'btn btn-primary pull-right']) !!}
+                                <button type="submit" class="btn btn-primary pull-right">Update</button>
                             </div>
                         </div>
                     </div>
 
-                    {!! Form::Close() !!}
+                    </form>
 
                 </div><!-- / Main Col -->
             </div><!-- / Main Row -->

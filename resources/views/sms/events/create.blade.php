@@ -25,11 +25,12 @@
                             <div class="panel-head font-size-20">Enter details of the sms event</div>
                         </div>
 
-                        {!! Form::Open(['url' => 'sms/events','id'=>'smseventsform']) !!}
+                        <form action="{{ url('sms/events') }}" method="POST" id="smseventsform">
+                            @csrf
 
                         @include('sms.events._form',['submitButtonText' => 'Add'])
 
-                        {!! Form::Close() !!}
+                        </form>
 
                     </div>
                 </div>

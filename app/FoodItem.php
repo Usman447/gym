@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class FoodItem extends Model
@@ -17,7 +16,6 @@ class FoodItem extends Model
     ];
 
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $searchableColumns = [

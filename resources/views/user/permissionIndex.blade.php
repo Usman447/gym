@@ -7,7 +7,7 @@
         <div class="page-head bg-grey-100">
             @include('flash::message')
             <h1 class="page-title">Permissions</h1>
-            <a href="{{ action('AclController@createPermission') }}" class="btn btn-primary active pull-right" role="button"> Add</a></h1>
+            <a href="{{ action([App\Http\Controllers\AclController::class, 'createPermission']) }}" class="btn btn-primary active pull-right" role="button"> Add</a></h1>
         </div>
 
         <div class="container-fluid">
@@ -35,7 +35,7 @@
                                         <td class="text-center">{{ $permission->description}}</td>
 
                                         <td class="text-center">
-                                            <a class="btn btn-info btn-sm" href="{{ action('AclController@editPermission',['id' => $permission->id]) }}">
+                                            <a class="btn btn-info btn-sm" href="{{ action([App\Http\Controllers\AclController::class, 'editPermission'], ['id' => $permission->id]) }}">
                                                 <i class="fa fa-edit "></i>
                                             </a>
                                             <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal-{{$permission->id}}"
@@ -57,10 +57,11 @@
                                                         <p>Are you sure you want to delete it?</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        {!! Form::Open(['action'=>['AclController@deletePermission',$permission->id],'method' => 'POST','id'=>'deleteform-'.$permission->id]) !!}
+                                                        <form action="{{ action([App\Http\Controllers\AclController::class, 'deletePermission'], ['id' => $permission->id]) }}" method="POST" id="deleteform-{{ $permission->id }}">
+                                                            @csrf
                                                         <input type="submit" class="btn btn-danger" value="Yes" id="btn-{{ $permission->id }}"/>
                                                         <button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
-                                                        {!! Form::Close() !!}
+                                                        </form>
                                                     </div>
                                                 </div>
 

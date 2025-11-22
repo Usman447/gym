@@ -46,31 +46,34 @@
 
                                 <div class="row">
                                     <div class="col-sm-12 no-padding">
-                                        {!! Form::Open(['method' => 'GET']) !!}
+                                        <form method="GET">
 
                                         <div class="col-sm-6">
-                                            {!! Form::label('food-order-daterangepicker','Date range') !!}
+                                            <label for="food-order-daterangepicker">Date range</label>
                                             <div id="food-order-daterangepicker"
                                                  class="gymie-daterangepicker btn bg-grey-50 daterange-padding no-border color-grey-600 hidden-xs no-shadow">
                                                 <i class="ion-calendar margin-right-10"></i>
                                                 <span>{{$drp_placeholder}}</span>
                                                 <i class="ion-ios-arrow-down margin-left-5"></i>
                                             </div>
-                                            {!! Form::text('drp_start',null,['class'=>'hidden', 'id' => 'drp_start']) !!}
-                                            {!! Form::text('drp_end',null,['class'=>'hidden', 'id' => 'drp_end']) !!}
+                                            <input type="text" name="drp_start" value="" class="hidden" id="drp_start">
+                                            <input type="text" name="drp_end" value="" class="hidden" id="drp_end">
                                         </div>
 
                                         <div class="col-sm-4">
-                                            {!! Form::label('sort_direction','Order') !!}
-                                            {!! Form::select('sort_direction',array('desc' => 'Descending','asc' => 'Ascending'),old('sort_direction', 'desc'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'sort_direction']) !!}
+                                            <label for="sort_direction">Order</label>
+                                            <select name="sort_direction" class="form-control selectpicker show-tick show-menu-arrow" id="sort_direction">
+                                                <option value="desc" {{ old('sort_direction', 'desc') == 'desc' ? 'selected' : '' }}>Descending</option>
+                                                <option value="asc" {{ old('sort_direction', 'desc') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-xs-2">
-                                            {!! Form::label('&nbsp;') !!} <br/>
+                                            <label>&nbsp;</label> <br/>
                                             <button type="submit" class="btn btn-primary active no-border">GO</button>
                                         </div>
 
-                                        {!! Form::Close() !!}
+                                        </form>
                                     </div>
                                 </div>
 
@@ -139,7 +142,7 @@
                                     </div>
                                     <div class="col-xs-6">
                                         <div class="gymie_paging pull-right">
-                                            {!! str_replace('/?', '?', $foodOrders->appends(Input::all())->render()) !!}
+                                            {!! str_replace('/?', '?', $foodOrders->appends(request()->all())->render()) !!}
                                         </div>
                                     </div>
                                 </div>

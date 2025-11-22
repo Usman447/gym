@@ -31,11 +31,11 @@
 
                                 <div class="row">
                                     <div class="col-sm-12 no-padding">
-                                        {!! Form::Open(['method' => 'GET']) !!}
+                                        <form method="GET">
 
                                         <div class="col-sm-3">
 
-                                            {!! Form::label('whatsapp-daterangepicker','Date range') !!}
+                                            <label for="whatsapp-daterangepicker">Date range</label>
 
                                             <div id="whatsapp-daterangepicker"
                                                  class="gymie-daterangepicker btn bg-grey-50 daterange-padding no-border color-grey-600 hidden-xs no-shadow">
@@ -44,32 +44,39 @@
                                                 <i class="ion-ios-arrow-down margin-left-5"></i>
                                             </div>
 
-                                            {!! Form::text('drp_start',null,['class'=>'hidden', 'id' => 'drp_start']) !!}
-                                            {!! Form::text('drp_end',null,['class'=>'hidden', 'id' => 'drp_end']) !!}
+                                            <input type="text" name="drp_start" value="" class="hidden" id="drp_start">
+                                            <input type="text" name="drp_end" value="" class="hidden" id="drp_end">
                                         </div>
 
                                         <div class="col-sm-2">
-                                            {!! Form::label('sort_field','Sort By') !!}
-                                            {!! Form::select('sort_field',array('sent_at' => 'Sent Date','member_name' => 'Member Name','reminder_number' => 'Reminder'),old('sort_field'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'sort_field']) !!}
+                                            <label for="sort_field">Sort By</label>
+                                            <select name="sort_field" class="form-control selectpicker show-tick show-menu-arrow" id="sort_field">
+                                                <option value="sent_at" {{ old('sort_field') == 'sent_at' ? 'selected' : '' }}>Sent Date</option>
+                                                <option value="member_name" {{ old('sort_field') == 'member_name' ? 'selected' : '' }}>Member Name</option>
+                                                <option value="reminder_number" {{ old('sort_field') == 'reminder_number' ? 'selected' : '' }}>Reminder</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-sm-2">
-                                            {!! Form::label('sort_direction','Order') !!}
-                                            {!! Form::select('sort_direction',array('desc' => 'Descending','asc' => 'Ascending'),old('sort_direction'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'sort_direction']) !!}</span>
+                                            <label for="sort_direction">Order</label>
+                                            <select name="sort_direction" class="form-control selectpicker show-tick show-menu-arrow" id="sort_direction">
+                                                <option value="desc" {{ old('sort_direction') == 'desc' ? 'selected' : '' }}>Descending</option>
+                                                <option value="asc" {{ old('sort_direction') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-xs-4">
-                                            {!! Form::label('search','Keyword') !!}
+                                            <label for="search">Keyword</label>
                                             <input value="{{ old('search') }}" name="search" id="search" type="text" class="form-control padding-right-35"
                                                    placeholder="Search by member name, phone number...">
                                         </div>
 
                                         <div class="col-xs-1">
-                                            {!! Form::label('&nbsp;') !!} <br/>
+                                            <label>&nbsp;</label> <br/>
                                             <button type="submit" class="btn btn-primary active no-border">GO</button>
                                         </div>
 
-                                        {!! Form::Close() !!}
+                                        </form>
                                     </div>
                                 </div>
 
@@ -149,7 +156,7 @@
 
                                     <div class="col-xs-6">
                                         <div class="gymie_paging pull-right">
-                                            {!! str_replace('/?', '?', $messages->appends(Input::all())->render()) !!}
+                                            {!! str_replace('/?', '?', $messages->appends(request()->all())->render()) !!}
                                         </div>
                                     </div>
                                 </div>

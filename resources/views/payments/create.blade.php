@@ -11,11 +11,10 @@
                             <div class="panel-head font-size-20">Enter details of the payment</div>
                         </div>
 
-                        {!! Form::Open(['url' => 'payments','id' => 'paymentsform']) !!}
+                        <form action="{{ url('payments') }}" method="POST" id="paymentsform">
+                            @csrf
 
                         @include('payments.form',['submitButtonText' => 'Accept Payment'])
-
-                        {!! Form::Close() !!}
 
                         </form>
 

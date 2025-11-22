@@ -19,7 +19,8 @@
                 </div>
             @endif
 
-            {!! Form::Open(['url' => 'food/orders','id'=>'foodOrderForm']) !!}
+            <form action="{{ url('food/orders') }}" method="POST" id="foodOrderForm">
+                @csrf
             
             <!-- Order Details -->
             <div class="row">
@@ -33,14 +34,17 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('order_number', 'Order Number') !!}
-                                        {!! Form::text('order_number', $orderNumber, ['class' => 'form-control', 'readonly' => 'readonly']) !!}
+                                        <label for="order_number">Order Number</label>
+                                        <input type="text" name="order_number" value="{{ $orderNumber }}" class="form-control" readonly="readonly">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('payment_mode', 'Payment Mode') !!}
-                                        {!! Form::select('payment_mode', [1 => 'Cash', 2 => 'Online'], 1, ['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'payment_mode']) !!}
+                                        <label for="payment_mode">Payment Mode</label>
+                                        <select name="payment_mode" class="form-control selectpicker show-tick show-menu-arrow" id="payment_mode">
+                                            <option value="1" selected>Cash</option>
+                                            <option value="2">Online</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -132,12 +136,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Create Order', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Create Order</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
         </div>
     </div>

@@ -3,7 +3,6 @@
 namespace App;
 
 use Lubus\Constants\Status;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
@@ -22,8 +21,7 @@ class Plan extends Model
         'updated_by',
     ];
 
-    //Eloquence Search mapping
-    use Eloquence;
+    //Eloquence Search mapping (removed - package not installed)
     use createdByUser, updatedByUser;
 
     protected $searchableColumns = [
@@ -55,5 +53,24 @@ class Plan extends Model
     public function service()
     {
         return $this->belongsTo('App\Service', 'service_id');
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('plan_code', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('plan_name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('plan_details', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

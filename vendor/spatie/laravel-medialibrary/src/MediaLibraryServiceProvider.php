@@ -2,57 +2,50 @@
 
 namespace Spatie\MediaLibrary;
 
-use Illuminate\Support\ServiceProvider;
-use Spatie\MediaLibrary\Commands\ClearCommand;
-use Spatie\MediaLibrary\Commands\RegenerateCommand;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Spatie\MediaLibrary\Conversions\Commands\RegenerateCommand;
+use Spatie\MediaLibrary\MediaCollections\Commands\CleanCommand;
+use Spatie\MediaLibrary\MediaCollections\Commands\ClearCommand;
+use Spatie\MediaLibrary\MediaCollections\MediaRepository;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\MediaLibrary\MediaCollections\Models\Observers\MediaObserver;
+use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\TinyPlaceholderGenerator;
+use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\WidthCalculator;
 
-class MediaLibraryServiceProvider extends ServiceProvider
+class MediaLibraryServiceProvider extends PackageServiceProvider
 {
-    /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
-
-    /**
-     * Bootstrap the application events.
-     */
-    public function boot()
+    public function configurePackage(Package $package): void
     {
-        $mediaClass = config('laravel-medialibrary.media_model');
-        $mediaClass::observe(new MediaObserver());
-
-        $this->publishes([
-            __DIR__.'/../resources/config/laravel-medialibrary.php' => config_path('laravel-medialibrary.php'),
-        ], 'config');
-
-        if (!class_exists('CreateMediaTable')) {
-
-            // Publish the migration
-            $timestamp = date('Y_m_d_His', time());
-
-            $this->publishes([
-                __DIR__.'/../resources/migrations/create_media_table.php.stub' => database_path('migrations/'.$timestamp.'_create_media_table.php'),
-            ], 'migrations');
-        }
+        $package
+            ->name('laravel-medialibrary')
+            ->hasConfigFile('media-library')
+            ->hasMigration('create_media_table')
+            ->hasViews('media-library')
+            ->hasCommands([
+                RegenerateCommand::class,
+                ClearCommand::class,
+                CleanCommand::class,
+            ]);
     }
 
-    /**
-     * Register the service provider.
-     */
-    public function register()
+    public function packageBooted(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../resources/config/laravel-medialibrary.php', 'laravel-medialibrary');
+        $mediaClass = config('media-library.media_model', Media::class);
+        $mediaObserverClass = config('media-library.media_observer', MediaObserver::class);
 
-        $this->app->singleton(MediaRepository::class);
+        $mediaClass::observe($this->app->make($mediaObserverClass));
+    }
 
-        $this->app->bind('command.medialibrary:regenerate', RegenerateCommand::class);
-        $this->app->bind('command.medialibrary:clear', ClearCommand::class);
+    public function packageRegistered(): void
+    {
+        $this->app->bind(WidthCalculator::class, config('media-library.responsive_images.width_calculator'));
+        $this->app->bind(TinyPlaceholderGenerator::class, config('media-library.responsive_images.tiny_placeholder_generator'));
 
-        $this->commands([
-            'command.medialibrary:regenerate',
-            'command.medialibrary:clear',
-        ]);
+        $this->app->scoped(MediaRepository::class, function () {
+            $mediaClass = config('media-library.media_model');
+
+            return new MediaRepository(new $mediaClass);
+        });
     }
 }

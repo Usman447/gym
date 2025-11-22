@@ -2,7 +2,7 @@
     "name": "illuminate/cookie",
     "description": "The Illuminate Cookie package.",
     "license": "MIT",
-    "homepage": "http://laravel.com",
+    "homepage": "https://laravel.com",
     "support": {
         "issues": "https://github.com/laravel/framework/issues",
         "source": "https://github.com/laravel/framework"
@@ -10,15 +10,18 @@
     "authors": [
         {
             "name": "Taylor Otwell",
-            "email": "taylorotwell@gmail.com"
+            "email": "taylor@laravel.com"
         }
     ],
     "require": {
-        "php": ">=5.5.9",
-        "illuminate/contracts": "5.1.*",
-        "illuminate/support": "5.1.*",
-        "symfony/http-kernel": "2.7.*",
-        "symfony/http-foundation": "2.7.*"
+        "php": "^8.2",
+        "ext-hash": "*",
+        "illuminate/collections": "^11.0",
+        "illuminate/contracts": "^11.0",
+        "illuminate/macroable": "^11.0",
+        "illuminate/support": "^11.0",
+        "symfony/http-foundation": "^7.0.3",
+        "symfony/http-kernel": "^7.0.3"
     },
     "autoload": {
         "psr-4": {
@@ -27,8 +30,11 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "5.1-dev"
+            "dev-master": "11.x-dev"
         }
+    },
+    "config": {
+        "sort-packages": true
     },
     "minimum-stability": "dev"
 }

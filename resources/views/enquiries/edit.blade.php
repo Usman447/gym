@@ -11,19 +11,21 @@
                             <div class="panel-head font-size-20">Enter details of the enquiry</div>
                         </div>
 
-                        {!! Form::model($enquiry, ['method' => 'POST','files'=>'true','action' => ['EnquiriesController@update',$enquiry->id],'id'=>'enquiriesform']) !!}
+                        <form action="{{ action(['App\Http\Controllers\EnquiriesController@update', $enquiry->id]) }}" method="POST" id="enquiriesform" enctype="multipart/form-data">
+                            @csrf
+                            @method('PUT')
                         <div class="panel-body">
                             @include('enquiries.form')
                             <div class="row">
                                 <div class="col-sm-2 pull-right">
                                     <div class="form-group">
-                                        {!! Form::submit('Update', ['class' => 'btn btn-primary pull-right']) !!}
+                                        <button type="submit" class="btn btn-primary pull-right">Update</button>
                                     </div>
                                 </div>
                             </div>
                         </div><!-- End of panel body -->
 
-                        {!! Form::Close() !!}
+                        </form>
 
                     </div><!-- / Panel no-border -->
                 </div><!-- / Col-md-12 -->

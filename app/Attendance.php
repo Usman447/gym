@@ -3,12 +3,10 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $table = 'trn_attendance';

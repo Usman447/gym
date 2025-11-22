@@ -4,7 +4,8 @@
     <?php use Carbon\Carbon; ?>
     <div class="rightside bg-grey-100">
         <div class="container-fluid">
-            {!! Form::Open(['action' => ['SubscriptionsController@modify',$subscription->id],'id'=>'subscriptionschangeform']) !!}
+            <form action="{{ action([App\Http\Controllers\SubscriptionsController::class, 'modify'], ['id' => $subscription->id]) }}" method="POST" id="subscriptionschangeform">
+                @csrf
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel no-border">
@@ -18,20 +19,20 @@
                             <div class="row">
                                 <div class="col-sm-3">
 
-                                    {!! Form::label('member_id','Member Code') !!}
+                                    <label for="member_id">Member Code</label>
 
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('plan_0','Plan') !!}
+                                    <label for="plan_0">Plan</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('start_date_0','Start Date') !!}
+                                    <label for="start_date_0">Start Date</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('end_date_0','End Date') !!}
+                                    <label for="end_date_0">End Date</label>
                                 </div>
 
 
@@ -40,9 +41,7 @@
                                 <div class="row">
                                     <div class="col-sm-3">
                                         <div class="form-group">
-                                            <?php $member_code = App\Member::where('status', '=', '1')->lists('member_code', 'id'); ?>
-
-                                            {!! Form::text('member_id',$subscription->member->member_code,['class'=>'form-control','id'=>'member_id','readonly']) !!}
+                                            <input type="text" name="member_id" value="{{ $subscription->member->member_code }}" class="form-control" id="member_id" readonly>
                                         </div>
                                     </div>
                                     <div class="col-sm-3">
@@ -58,20 +57,20 @@
                                                 @endforeach
                                             </select>
                                             <div class="plan-price">
-                                                {!! Form::hidden('plan[0][price]','', array('id' => 'price_0')) !!}
+                                                <input type="hidden" name="plan[0][price]" value="" id="price_0">
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="col-sm-3">
                                         <div class="form-group plan-start-date">
-                                            {!! Form::text('plan[0][start_date]',$subscription->start_date->format('Y-m-d'),['class'=>'form-control datepicker-startdate childStartDate', 'id' => 'start_date_0', 'data-row-id' => '0']) !!}
+                                            <input type="text" name="plan[0][start_date]" value="{{ $subscription->start_date->format('Y-m-d') }}" class="form-control datepicker-startdate childStartDate" id="start_date_0" data-row-id="0">
                                         </div>
                                     </div>
 
                                     <div class="col-sm-3">
                                         <div class="form-group plan-end-date">
-                                            {!! Form::text('plan[0][end_date]',$subscription->end_date->format('Y-m-d'),['class'=>'form-control childEndDate', 'id' => 'end_date_0', 'readonly' => 'readonly','data-row-id' => '0']) !!}
+                                            <input type="text" name="plan[0][end_date]" value="{{ $subscription->end_date->format('Y-m-d') }}" class="form-control childEndDate" id="end_date_0" readonly="readonly" data-row-id="0">
                                         </div>
                                     </div>
 
@@ -95,17 +94,17 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('invoice_number','Invoice Number') !!}
-                                        {!! Form::text('invoice_number',$subscription->invoice->invoice_number,['class'=>'form-control', 'id' => 'invoice_number','readonly']) !!}
+                                        <label for="invoice_number">Invoice Number</label>
+                                        <input type="text" name="invoice_number" value="{{ $subscription->invoice->invoice_number }}" class="form-control" id="invoice_number" readonly>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('subscription_amount','Gym subscription fee') !!}
+                                        <label for="subscription_amount">Gym subscription fee</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('subscription_amount',$subscription->invoice->total,['class'=>'form-control', 'id' => 'subscription_amount','readonly' => 'readonly']) !!}
+                                            <input type="text" name="subscription_amount" value="{{ $subscription->invoice->total }}" class="form-control" id="subscription_amount" readonly="readonly">
                                         </div>
                                     </div>
                                 </div>
@@ -117,17 +116,17 @@
                                 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_amount','Discount amount') !!}
+                                        <label for="discount_amount">Discount amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('discount_amount',$subscription->invoice->discount_amount,['class'=>'form-control', 'id' => 'discount_amount']) !!}
+                                            <input type="text" name="discount_amount" value="{{ $subscription->invoice->discount_amount }}" class="form-control" id="discount_amount">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_note','Discount note') !!}
-                                        {!! Form::text('discount_note',$subscription->invoice->discount_note,['class'=>'form-control', 'id' => 'discount_note']) !!}
+                                        <label for="discount_note">Discount note</label>
+                                        <input type="text" name="discount_note" value="{{ $subscription->invoice->discount_note }}" class="form-control" id="discount_note">
                                     </div>
                                 </div>
                             </div>
@@ -150,30 +149,30 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('previous_payment','Already paid') !!}
+                                        <label for="previous_payment">Already paid</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('previous_payment',($already_paid == null ? '0' : $already_paid),['class'=>'form-control', 'id' => 'previous_payment']) !!}
+                                            <input type="text" name="previous_payment" value="{{ $already_paid == null ? '0' : $already_paid }}" class="form-control" id="previous_payment">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-2">
                                     <div class="form-group">
-                                        {!! Form::label('payment_amount','Amount Received') !!}
+                                        <label for="payment_amount">Amount Received</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('payment_amount',null,['class'=>'form-control', 'id' => 'payment_amount', 'data-amounttotal' => '0']) !!}
+                                            <input type="text" name="payment_amount" value="" class="form-control" id="payment_amount" data-amounttotal="0">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-2">
                                     <div class="form-group">
-                                        {!! Form::label('payment_amount_pending','Amount Pending') !!}
+                                        <label for="payment_amount_pending">Amount Pending</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('payment_amount_pending',null,['class'=>'form-control', 'id' => 'payment_amount_pending', 'readonly']) !!}
+                                            <input type="text" name="payment_amount_pending" value="" class="form-control" id="payment_amount_pending" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -181,8 +180,11 @@
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('mode','Mode') !!}
-                                        {!! Form::select('mode',array('1' => 'Cash', '2' => 'Online'),1,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'mode']) !!}
+                                        <label for="mode">Mode</label>
+                                        <select name="mode" class="form-control selectpicker show-tick show-menu-arrow" id="mode">
+                                            <option value="1" selected>Cash</option>
+                                            <option value="2">Online</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -196,12 +198,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Change', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Change</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
         </div>
     </div>
 

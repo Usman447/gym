@@ -18,7 +18,8 @@
                         </div>
                     @endif
 
-                    {!! Form::Open(['url' => 'user','id' => 'usersform','files'=>'true']) !!}
+                    <form action="{{ url('user') }}" method="POST" id="usersform" enctype="multipart/form-data">
+                        @csrf
 
                     <div class="panel no-border">
                         <div class="panel-title">
@@ -30,15 +31,15 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('name','Name') !!}
-                                        {!! Form::text('name',null,['class'=>'form-control', 'id' => 'name']) !!}
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" value="{{ old('name') }}" class="form-control" id="name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('email','Email') !!}
-                                        {!! Form::text('email',null,['class'=>'form-control', 'id' => 'email']) !!}
+                                        <label for="email">Email</label>
+                                        <input type="text" name="email" value="{{ old('email') }}" class="form-control" id="email">
                                     </div>
                                 </div>
                             </div>
@@ -46,17 +47,20 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                    {!! Form::label('status','Status') !!}
+                                    <label for="status">Status</label>
                                     <!--0 for inactive , 1 for active-->
-                                        {!! Form::select('status',array('1' => 'Active', '0' => 'InActive'),null,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status']) !!}
+                                        <select name="status" class="form-control selectpicker show-tick show-menu-arrow" id="status">
+                                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
+                                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>InActive</option>
+                                        </select>
                                     </div>
                                 </div>
 
                                 @if(isset($user) && $user->photo != "")
                                     <div class="col-sm-4">
                                         <div class="form-group">
-                                            {!! Form::label('photo','Photo') !!}
-                                            {!! Form::file('photo',['class'=>'form-control', 'id' => 'photo']) !!}
+                                            <label for="photo">Photo</label>
+                                            <input type="file" name="photo" class="form-control" id="photo">
                                         </div>
                                     </div>
                                     <div class="col-sm-2">
@@ -66,8 +70,8 @@
                                 @else
                                     <div class="col-sm-6">
                                         <div class="form-group">
-                                            {!! Form::label('photo','Photo') !!}
-                                            {!! Form::file('photo',['class'=>'form-control', 'id' => 'photo']) !!}
+                                            <label for="photo">Photo</label>
+                                            <input type="file" name="photo" class="form-control" id="photo">
                                         </div>
                                     </div>
                                 @endif
@@ -76,15 +80,15 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('password','Password') !!}
-                                        {!! Form::password('password',['class'=>'form-control', 'id' => 'password']) !!}
+                                        <label for="password">Password</label>
+                                        <input type="password" name="password" class="form-control" id="password">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('password_confirmation','Confirm Password') !!}
-                                        {!! Form::password('password_confirmation',['class'=>'form-control', 'id' => 'password_confirmation']) !!}
+                                        <label for="password_confirmation">Confirm Password</label>
+                                        <input type="password" name="password_confirmation" class="form-control" id="password_confirmation">
                                     </div>
                                 </div>
                             </div>
@@ -92,8 +96,12 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('timings','Timings') !!}
-                                        {!! Form::select('timings',array('Morning' => 'Morning', 'Ladies' => 'Ladies', 'Evening' => 'Evening'),null,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'timings']) !!}
+                                        <label for="timings">Timings</label>
+                                        <select name="timings" class="form-control selectpicker show-tick show-menu-arrow" id="timings">
+                                            <option value="Morning" {{ old('timings') == 'Morning' ? 'selected' : '' }}>Morning</option>
+                                            <option value="Ladies" {{ old('timings') == 'Ladies' ? 'selected' : '' }}>Ladies</option>
+                                            <option value="Evening" {{ old('timings') == 'Evening' ? 'selected' : '' }}>Evening</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -108,9 +116,13 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <?php $roles = App\Role::where('id', '!=', '1')->lists('name', 'id'); ?>
-                                        {!! Form::label('Role') !!}
-                                        {!! Form::select('role_id',$roles,null,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'role_id']) !!}
+                                        <?php $roles = App\Role::where('id', '!=', '1')->pluck('name', 'id'); ?>
+                                        <label for="role_id">Role</label>
+                                        <select name="role_id" class="form-control selectpicker show-tick show-menu-arrow" id="role_id">
+                                            @foreach($roles as $id => $name)
+                                                <option value="{{ $id }}" {{ old('role_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -120,12 +132,12 @@
                     <div class="row">
                         <div class="col-sm-2 pull-right">
                             <div class="form-group">
-                                {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                                <button type="submit" class="btn btn-primary pull-right">Create</button>
                             </div>
                         </div>
                     </div>
 
-                    {!! Form::Close() !!}
+                    </form>
 
 
                 </div>

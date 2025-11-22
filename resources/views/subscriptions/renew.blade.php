@@ -18,8 +18,9 @@
                 </div>
             @endif
 
-            {!! Form::Open(['url' => 'subscriptions','id'=>'subscriptionsform']) !!}
-            {!! Form::hidden('invoiceCounter',$invoiceCounter) !!}
+            <form action="{{ url('subscriptions') }}" method="POST" id="subscriptionsform">
+                @csrf
+                <input type="hidden" name="invoiceCounter" value="{{ $invoiceCounter }}">
 
         <!-- Member Details -->
             <div class="row">
@@ -33,23 +34,23 @@
                             <div class="row">
                                 <div class="col-sm-5">
                                     <div class="form-group">
-                                        {!! Form::label('member_id','Member Code') !!}
-                                        {!! Form::text('member_code_display', $member->member_code . ' - ' . $member->name, ['class'=>'form-control', 'id'=>'member_code_display', 'readonly' => 'readonly']) !!}
-                                        {!! Form::hidden('member_id', $member_id) !!}
+                                        <label for="member_id">Member Code</label>
+                                        <input type="text" name="member_code_display" value="{{ $member->member_code }} - {{ $member->name }}" class="form-control" id="member_code_display" readonly="readonly">
+                                        <input type="hidden" name="member_id" value="{{ $member_id }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-5">
-                                    {!! Form::label('plan_0','Plan') !!}
+                                    <label for="plan_0">Plan</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('start_date_0','Start Date') !!}
+                                    <label for="start_date_0">Start Date</label>
                                 </div>
 
                                 <div class="col-sm-3">
-                                    {!! Form::label('end_date_0','End Date') !!}
+                                    <label for="end_date_0">End Date</label>
                                 </div>
 
                                 <div class="col-sm-1">
@@ -79,21 +80,21 @@
                                                     @endforeach
                                                 </select>
                                                 <div class="plan-price">
-                                                    {!! Form::hidden("plan[$x][price]",'', array('id' => "price_$x")) !!}
-                                                    {!! Form::hidden('previousSubscriptions[]',$subscription->id) !!}
+                                                    <input type="hidden" name="plan[{{ $x }}][price]" value="" id="price_{{ $x }}">
+                                                    <input type="hidden" name="previousSubscriptions[]" value="{{ $subscription->id }}">
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-3">
                                             <div class="form-group plan-start-date">
-                                                {!! Form::text("plan[$x][start_date]",$startDate->format('Y-m-d'),['class'=>'form-control datepicker-startdate childStartDate', 'id' => "start_date_$x", 'data-row-id' => "$x"]) !!}
+                                                <input type="text" name="plan[{{ $x }}][start_date]" value="{{ $startDate->format('Y-m-d') }}" class="form-control datepicker-startdate childStartDate" id="start_date_{{ $x }}" data-row-id="{{ $x }}">
                                             </div>
                                         </div>
 
                                         <div class="col-sm-3">
                                             <div class="form-group plan-end-date">
-                                                {!! Form::text("plan[$x][end_date]",$endDate->format('Y-m-d'),['class'=>'form-control childEndDate', 'id' => "end_date_$x", 'readonly' => 'readonly','data-row-id' => "$x"]) !!}
+                                                <input type="text" name="plan[{{ $x }}][end_date]" value="{{ $endDate->format('Y-m-d') }}" class="form-control childEndDate" id="end_date_{{ $x }}" readonly="readonly" data-row-id="{{ $x }}">
                                             </div>
                                         </div>
 
@@ -133,22 +134,21 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('invoice_number','Invoice Number') !!}
-                                        {!! Form::text('invoice_number',$invoice_number,['class'=>'form-control', 'id' => 'invoice_number', ($invoice_number_mode == \constNumberingMode::Auto ? 'readonly' : '')]) !!}
+                                        <label for="invoice_number">Invoice Number</label>
+                                        <input type="text" name="invoice_number" value="{{ $invoice_number }}" class="form-control" id="invoice_number" {{ $invoice_number_mode == \constNumberingMode::Auto ? 'readonly' : '' }}>
                                     </div>
                                 </div>
 
                                 <!-- <div class="col-sm-4">
                                     <div class="form-group"> -->
-                            {!! Form::hidden('admission_amount','Admission') !!}
-                            {!! Form::hidden('admission_amount',0,['class'=>'form-control', 'id' => 'admission_amount']) !!}
+                            <input type="hidden" name="admission_amount" value="0" id="admission_amount">
                             <!-- </div>
                                 </div> -->
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('subscription_amount','Subscription fee') !!}
-                                        {!! Form::text('subscription_amount',null,['class'=>'form-control', 'id' => 'subscription_amount','readonly' => 'readonly']) !!}
+                                        <label for="subscription_amount">Subscription fee</label>
+                                        <input type="text" name="subscription_amount" value="" class="form-control" id="subscription_amount" readonly="readonly">
                                     </div>
                                 </div>
 
@@ -159,10 +159,10 @@
                                 @if($availableCredit > 0)
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('available_balance','Available Balance') !!}
+                                        <label for="available_balance">Available Balance</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('available_balance', number_format($availableCredit, 0), ['class'=>'form-control', 'id' => 'available_balance', 'readonly' => 'readonly', 'style' => 'background-color: #d4edda;', 'data-raw-value' => $availableCredit]) !!}
+                                            <input type="text" name="available_balance" value="{{ number_format($availableCredit, 0) }}" class="form-control" id="available_balance" readonly="readonly" style="background-color: #d4edda;" data-raw-value="{{ $availableCredit }}">
                                         </div>
                                         <small class="text-success">Credit available for use</small>
                                     </div>
@@ -170,10 +170,10 @@
                                 @elseif($dueAmount > 0)
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('due_amount','Due Amount') !!}
+                                        <label for="due_amount">Due Amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('due_amount', number_format($dueAmount, 0), ['class'=>'form-control', 'id' => 'due_amount', 'readonly' => 'readonly', 'style' => 'background-color: #f8d7da;', 'data-raw-value' => $dueAmount]) !!}
+                                            <input type="text" name="due_amount" value="{{ number_format($dueAmount, 0) }}" class="form-control" id="due_amount" readonly="readonly" style="background-color: #f8d7da;" data-raw-value="{{ $dueAmount }}">
                                         </div>
                                         <small class="text-danger">Outstanding amount from previous invoices</small>
                                     </div>
@@ -182,17 +182,17 @@
                                 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_amount','Discount amount') !!}
+                                        <label for="discount_amount">Discount amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('discount_amount',null,['class'=>'form-control', 'id' => 'discount_amount']) !!}
+                                            <input type="text" name="discount_amount" value="" class="form-control" id="discount_amount">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('discount_note','Discount note') !!}
-                                        {!! Form::text('discount_note',null,['class'=>'form-control', 'id' => 'discount_note']) !!}
+                                        <label for="discount_note">Discount note</label>
+                                        <input type="text" name="discount_note" value="" class="form-control" id="discount_note">
                                     </div>
                                 </div>
                             </div>
@@ -230,15 +230,18 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('payment_amount','Amount') !!}
-                                        {!! Form::text('payment_amount',null,['class'=>'form-control', 'id' => 'payment_amount']) !!}
+                                        <label for="payment_amount">Amount</label>
+                                        <input type="text" name="payment_amount" value="" class="form-control" id="payment_amount">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('mode','Mode') !!}
-                                        {!! Form::select('mode',array('1' => 'Cash', '2' => 'Online'),1,['class'=>'form-control selectpicker show-tick', 'id' => 'mode']) !!}
+                                        <label for="mode">Mode</label>
+                                        <select name="mode" class="form-control selectpicker show-tick" id="mode">
+                                            <option value="1" selected>Cash</option>
+                                            <option value="2">Online</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -255,12 +258,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Create</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
         </div> <!-- content -->
     </div> <!-- rightside -->

@@ -18,7 +18,8 @@
                 </div>
             @endif
 
-            {!! Form::Open(['url' => 'enquiries','id'=>'enquiriesform','files'=>'true']) !!}
+            <form action="{{ url('enquiries') }}" method="POST" id="enquiriesform" enctype="multipart/form-data">
+                @csrf
         <!-- Enquiry Details -->
             <div class="row">
                 <div class="col-md-12">
@@ -51,12 +52,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Create</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
         </div> <!-- content -->
     </div> <!-- rightside -->

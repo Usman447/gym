@@ -11,17 +11,18 @@
                             <div class="panel-head font-size-20">Enter details of the subscription</div>
                         </div>
 
-                        {!! Form::model($subscription, ['method' => 'POST','action' => ['SubscriptionsController@update',$subscription->id],'id'=>'subscriptionsform']) !!}
+                        <form action="{{ action([App\Http\Controllers\SubscriptionsController::class, 'update'], ['id' => $subscription->id]) }}" method="POST" id="subscriptionsform">
+                            @csrf
+                            @method('PUT')
                         <div class="panel-body">
 
                             <div class="row">
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        <?php $member_code = App\Member::where('status', '=', '1')->lists('member_code', 'id'); ?>
-                                        {!! Form::label('member_id','Member Code') !!}
+                                        <label for="member_id">Member Code</label>
 
-                                        {!! Form::text('member_display', $subscription->member->member_code,['class'=> 'form-control', 'id' => 'member_display','readonly' => 'readonly']) !!}
-                                        {!! Form::hidden('member_id', $subscription->member_id) !!}
+                                        <input type="text" name="member_display" value="{{ $subscription->member->member_code }}" class="form-control" id="member_display" readonly="readonly">
+                                        <input type="hidden" name="member_id" value="{{ $subscription->member_id }}">
 
                                     </div>
                                 </div>
@@ -29,23 +30,23 @@
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <?php $plans = App\Plan::where('status', '=', '1')->get(); ?>
-                                        {!! Form::label('plan_id','Plan Name') !!}
-                                        {!! Form::text('plan_display', $subscription->plan->plan_display,['class'=> 'form-control plan-data', 'id' => 'plan_display','readonly' => 'readonly','data-days' => $subscription->plan->days]) !!}
-                                        {!! Form::hidden('plan_id', $subscription->plan_id) !!}
+                                        <label for="plan_id">Plan Name</label>
+                                        <input type="text" name="plan_display" value="{{ $subscription->plan->plan_display }}" class="form-control plan-data" id="plan_display" readonly="readonly" data-days="{{ $subscription->plan->days }}">
+                                        <input type="hidden" name="plan_id" value="{{ $subscription->plan_id }}">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('start_date','Start Date') !!}
-                                        {!! Form::text('start_date',$subscription->start_date->format('Y-m-d'),['class'=> 'form-control', 'id' => 'start_date','readonly']) !!}
+                                        <label for="start_date">Start Date</label>
+                                        <input type="text" name="start_date" value="{{ $subscription->start_date->format('Y-m-d') }}" class="form-control" id="start_date" readonly>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('end_date','End Date') !!}
-                                        {!! Form::text('end_date',$subscription->end_date->format('Y-m-d'),['class'=>'form-control datepicker-enddate', 'id' => 'end_date']) !!}
+                                        <label for="end_date">End Date</label>
+                                        <input type="text" name="end_date" value="{{ $subscription->end_date->format('Y-m-d') }}" class="form-control datepicker-enddate" id="end_date">
                                     </div>
                                 </div>
                             </div>
@@ -56,12 +57,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Update', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Update</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
 
         </div>

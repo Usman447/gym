@@ -188,12 +188,12 @@ class AclController extends Controller
                           ]);
 
             //Updating permissions for the role
-            $DBpermissions = PermissionRole::where('role_id', $id)->select('permission_id')->lists('permission_id');
+            $DBpermissions = PermissionRole::where('role_id', $id)->select('permission_id')->pluck('permission_id');
             $DBpermissions = collect($DBpermissions ?: []); // Ensure it's a collection
             $ClientPermissions = collect($request->permissions ?: []); // Handle case where no permissions are selected
             
             // Get hidden permission IDs (Services and SMS) to preserve them
-            $hiddenPermissionIds = Permission::whereIn('group_key', ['Services', 'SMS'])->lists('id');
+            $hiddenPermissionIds = Permission::whereIn('group_key', ['Services', 'SMS'])->pluck('id');
             $hiddenPermissionIds = collect($hiddenPermissionIds ?: []); // Ensure it's a collection
             
             // Preserve hidden permissions that are already assigned

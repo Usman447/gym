@@ -23,35 +23,37 @@
                             <div class="panel-head">Enter Details of the Permission</div>
                         </div>
 
-                        {!! Form::Open(['method' => 'POST','id' => 'permissionsform','action' => ['AclController@updatePermission',$permission->id]]) !!}
+                        <form action="{{ action(['App\Http\Controllers\AclController@updatePermission', $permission->id]) }}" method="POST" id="permissionsform">
+                            @csrf
+                            @method('PUT')
 
                         <div class="panel-body">
                             <div class="row">
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('name','Name') !!}
-                                        {!! Form::text('name',$permission->name,['class'=>'form-control', 'id' => 'name']) !!}
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" value="{{ old('name', $permission->name) }}" class="form-control" id="name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('display_name','Display name') !!}
-                                        {!! Form::text('display_name',$permission->display_name,['class'=>'form-control', 'id' => 'display_name']) !!}
+                                        <label for="display_name">Display name</label>
+                                        <input type="text" name="display_name" value="{{ old('display_name', $permission->display_name) }}" class="form-control" id="display_name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('description','Description') !!}
-                                        {!! Form::text('description',$permission->description,['class'=>'form-control', 'id' => 'description']) !!}
+                                        <label for="description">Description</label>
+                                        <input type="text" name="description" value="{{ old('description', $permission->description) }}" class="form-control" id="description">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-3">
                                     <div class="form-group">
-                                        {!! Form::label('group_key','Group key') !!}
-                                        {!! Form::text('group_key',$permission->group_key,['class'=>'form-control', 'id' => 'group_key']) !!}
+                                        <label for="group_key">Group key</label>
+                                        <input type="text" name="group_key" value="{{ old('group_key', $permission->group_key) }}" class="form-control" id="group_key">
                                     </div>
                                 </div>
                             </div>
@@ -61,12 +63,12 @@
                     <div class="row">
                         <div class="col-sm-2 pull-right">
                             <div class="form-group">
-                                {!! Form::submit('Update', ['class' => 'btn btn-primary pull-right']) !!}
+                                <button type="submit" class="btn btn-primary pull-right">Update</button>
                             </div>
                         </div>
                     </div>
 
-                    {!! Form::Close() !!}
+                    </form>
 
 
                 </div>

@@ -2,13 +2,11 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentDetail extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser,updatedByUser;
 
     protected $table = 'trn_payment_details';
@@ -51,5 +49,25 @@ class PaymentDetail extends Model
     public function cheque()
     {
         return $this->hasOne('App\ChequeDetail', 'payment_id');
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     * Note: This assumes the query already has the invoice and member joins from indexQuery
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('trn_payment_details.payment_amount', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('trn_invoice.invoice_number', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('mst_members.name', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

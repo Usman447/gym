@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class FoodOrder extends Model
@@ -20,7 +19,6 @@ class FoodOrder extends Model
     protected $dates = ['created_at', 'updated_at'];
 
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $searchableColumns = [

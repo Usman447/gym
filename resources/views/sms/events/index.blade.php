@@ -21,13 +21,13 @@
                         <div class="panel-body no-padding-top bg-white">
                             <div class="row margin-top-15 margin-bottom-15">
                                 <div class="col-xs-12 col-md-3 pull-right">
-                                    {!! Form::Open(['method' => 'GET']) !!}
+                                    <form method="GET">
                                     <div class="btn-inline pull-right">
                                         <input name="search" id="search" type="text" class="form-control padding-right-35" placeholder="Search...">
-                                        <button class="btn btn-link no-shadow bg-transparent no-padding-top padding-right-10" type="button"><i
+                                        <button class="btn btn-link no-shadow bg-transparent no-padding-top padding-right-10" type="submit"><i
                                                     class="ion-search"></i></button>
                                     </div>
-                                    {!! Form::Close() !!}
+                                    </form>
 
                                 </div>
                             </div>
@@ -97,10 +97,11 @@
                                                                 <p>Are you sure you want to delete it?</p>
                                                             </div>
                                                             <div class="modal-footer">
-                                                                {!! Form::Open(['action'=>['SmsController@destroyEvent',$event->id],'method' => 'POST','id'=>'archiveform-'.$event->id]) !!}
-                                                                <input type="submit" class="btn btn-danger" value="Yes" id="btn-{{ $event->id }}"/>
-                                                                <button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
-                                                                {!! Form::Close() !!}
+                                                                <form action="{{ action(['App\Http\Controllers\SmsController@destroyEvent', $event->id]) }}" method="POST" id="archiveform-{{ $event->id }}">
+                                                                    @csrf
+                                                                    <input type="submit" class="btn btn-danger" value="Yes" id="btn-{{ $event->id }}"/>
+                                                                    <button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -123,7 +124,7 @@
 
                                     <div class="col-xs-6">
                                         <div class="gymie_paging pull-right">
-                                            {!! str_replace('/?', '?', $events->appends(Input::Only('search'))->render()) !!}
+                                            {!! str_replace('/?', '?', $events->appends(request()->only('search'))->render()) !!}
                                         </div>
                                     </div>
                                 </div>

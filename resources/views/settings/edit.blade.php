@@ -10,7 +10,8 @@
         </div>
 
         <div class="container-fluid">
-        {!! Form::Open(['url' => 'settings/save','id'=>'settingsform','files'=>'true']) !!}
+        <form action="{{ url('settings/save') }}" method="POST" id="settingsform" enctype="multipart/form-data">
+            @csrf
         <!-- General Settings -->
             <div class="row">
                 <div class="col-md-12">
@@ -24,22 +25,22 @@
                                 <!--Main row start-->
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('gym_name','Gym Name') !!}
-                                        {!! Form::text('gym_name',$settings['gym_name'],['class'=>'form-control', 'id' => 'gym_name']) !!}
+                                        <label for="gym_name">Gym Name</label>
+                                        <input type="text" name="gym_name" value="{{ $settings['gym_name'] }}" class="form-control" id="gym_name">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('financial_start','Financial year start') !!}
-                                        {!! Form::text('financial_start',$settings['financial_start'],['class'=>'form-control datepicker-default', 'id' => 'financial_start']) !!}
+                                        <label for="financial_start">Financial year start</label>
+                                        <input type="text" name="financial_start" value="{{ $settings['financial_start'] }}" class="form-control datepicker-default" id="financial_start">
                                     </div>
                                 </div>
 
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('financial_end','Financial year end') !!}
-                                        {!! Form::text('financial_end',$settings['financial_end'],['class'=>'form-control datepicker-default', 'id' => 'financial_end']) !!}
+                                        <label for="financial_end">Financial year end</label>
+                                        <input type="text" name="financial_end" value="{{ $settings['financial_end'] }}" class="form-control datepicker-default" id="financial_end">
                                     </div>
                                 </div>
 
@@ -52,7 +53,7 @@
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="form-group">
-                                                    {!! Form::label('gym_logo','Gym Logo') !!}<br>
+                                                    <label for="gym_logo">Gym Logo</label><br>
                                                     <img alt="gym logo" src="{{url('/images/Invoice/'.'gym_logo'.'.jpg') }}"/>
                                                 </div>
                                             </div>
@@ -60,7 +61,7 @@
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="form-group">
-                                                    {!! Form::file('gym_logo',['class'=>'form-control', 'id' => 'gym_logo']) !!}
+                                                    <input type="file" name="gym_logo" class="form-control" id="gym_logo">
                                                 </div>
                                             </div>
                                         </div>
@@ -68,8 +69,8 @@
                                 @else
                                     <div class="col-sm-4">
                                         <div class="form-group">
-                                            {!! Form::label('gym_logo','Gym Logo') !!}
-                                            {!! Form::file('gym_logo',['class'=>'form-control', 'id' => 'gym_logo']) !!}
+                                            <label for="gym_logo">Gym Logo</label>
+                                            <input type="file" name="gym_logo" class="form-control" id="gym_logo">
                                         </div>
                                     </div>
                                 @endif
@@ -78,8 +79,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('gym_address_1','Gym Address line 1') !!}
-                                                {!! Form::text('gym_address_1',$settings['gym_address_1'],['class'=>'form-control', 'id' => 'gym_address_1']) !!}
+                                                <label for="gym_address_1">Gym Address line 1</label>
+                                                <input type="text" name="gym_address_1" value="{{ $settings['gym_address_1'] }}" class="form-control" id="gym_address_1">
                                             </div>
                                         </div>
                                     </div>
@@ -87,8 +88,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('gym_address_2','Gym Address Line 2') !!}
-                                                {!! Form::text('gym_address_2',$settings['gym_address_2'],['class'=>'form-control', 'id' => 'gym_address_2']) !!}
+                                                <label for="gym_address_2">Gym Address Line 2</label>
+                                                <input type="text" name="gym_address_2" value="{{ $settings['gym_address_2'] }}" class="form-control" id="gym_address_2">
                                             </div>
                                         </div>
                                     </div>
@@ -112,29 +113,35 @@
                                     <div class="row">
                                         <div class="col-sm-3">
                                             <div class="form-group">
-                                                {!! Form::label('invoice_prefix','Invoice prefix') !!}
-                                                {!! Form::text('invoice_prefix',$settings['invoice_prefix'],['class'=>'form-control', 'id' => 'invoice_prefix']) !!}
+                                                <label for="invoice_prefix">Invoice prefix</label>
+                                                <input type="text" name="invoice_prefix" value="{{ $settings['invoice_prefix'] }}" class="form-control" id="invoice_prefix">
                                             </div>
                                         </div>
 
                                         <div class="col-sm-3">
                                             <div class="form-group">
-                                                {!! Form::label('invoice_last_number','Invoice Last Number') !!}
-                                                {!! Form::text('invoice_last_number',$settings['invoice_last_number'],['class'=>'form-control', 'id' => 'invoice_last_number', 'readonly' => '']) !!}
+                                                <label for="invoice_last_number">Invoice Last Number</label>
+                                                <input type="text" name="invoice_last_number" value="{{ $settings['invoice_last_number'] }}" class="form-control" id="invoice_last_number" readonly>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-3">
                                             <div class="form-group">
-                                                {!! Form::label('invoice_name_type','Invoice name type') !!}
-                                                {!! Form::select('invoice_name_type',array('gym_logo' => 'Gym Logo', 'gym_name' => 'Gym Name'),$settings['invoice_name_type'],['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'invoice_name_type']) !!}
+                                                <label for="invoice_name_type">Invoice name type</label>
+                                                <select name="invoice_name_type" class="form-control selectpicker show-tick show-menu-arrow" id="invoice_name_type">
+                                                    <option value="gym_logo" {{ $settings['invoice_name_type'] == 'gym_logo' ? 'selected' : '' }}>Gym Logo</option>
+                                                    <option value="gym_name" {{ $settings['invoice_name_type'] == 'gym_name' ? 'selected' : '' }}>Gym Name</option>
+                                                </select>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-3">
                                             <div class="form-group">
-                                                {!! Form::label('invoice_number_mode','Invoice number mode') !!}
-                                                {!! Form::select('invoice_number_mode',array('0' => 'Manual', '1' => 'Automatic'),$settings['invoice_number_mode'],['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'invoice_number_mode']) !!}
+                                                <label for="invoice_number_mode">Invoice number mode</label>
+                                                <select name="invoice_number_mode" class="form-control selectpicker show-tick show-menu-arrow" id="invoice_number_mode">
+                                                    <option value="0" {{ $settings['invoice_number_mode'] == '0' ? 'selected' : '' }}>Manual</option>
+                                                    <option value="1" {{ $settings['invoice_number_mode'] == '1' ? 'selected' : '' }}>Automatic</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -159,22 +166,25 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('member_prefix','Member Prefix') !!}
-                                                {!! Form::text('member_prefix',$settings['member_prefix'],['class'=>'form-control', 'id' => 'member_prefix']) !!}
+                                                <label for="member_prefix">Member Prefix</label>
+                                                <input type="text" name="member_prefix" value="{{ $settings['member_prefix'] }}" class="form-control" id="member_prefix">
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('member_last_number','Member Last Number') !!}
-                                                {!! Form::text('member_last_number',$settings['member_last_number'],['class'=>'form-control', 'id' => 'member_last_number', 'readonly' => '']) !!}
+                                                <label for="member_last_number">Member Last Number</label>
+                                                <input type="text" name="member_last_number" value="{{ $settings['member_last_number'] }}" class="form-control" id="member_last_number" readonly>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('member_number_mode','Member number mode') !!}
-                                                {!! Form::select('member_number_mode',array('0' => 'Manual', '1' => 'Automatic'),$settings['member_number_mode'],['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'member_number_mode']) !!}
+                                                <label for="member_number_mode">Member number mode</label>
+                                                <select name="member_number_mode" class="form-control selectpicker show-tick show-menu-arrow" id="member_number_mode">
+                                                    <option value="0" {{ $settings['member_number_mode'] == '0' ? 'selected' : '' }}>Manual</option>
+                                                    <option value="1" {{ $settings['member_number_mode'] == '1' ? 'selected' : '' }}>Automatic</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -199,10 +209,10 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('admission_fee','Admission Fee') !!}
+                                                <label for="admission_fee">Admission Fee</label>
                                                 <div class="input-group">
                                                     <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                                    {!! Form::text('admission_fee',$settings['admission_fee'],['class'=>'form-control', 'id' => 'admission_fee', 'readonly' => '']) !!}
+                                                    <input type="text" name="admission_fee" value="{{ $settings['admission_fee'] }}" class="form-control" id="admission_fee" readonly>
                                                 </div>
                                             </div>
                                         </div>
@@ -229,15 +239,18 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_automation_enabled','Enable WhatsApp Automation') !!}
-                                                {!! Form::select('whatsapp_automation_enabled',array('0' => 'Disabled', '1' => 'Enabled'),$settings['whatsapp_automation_enabled'] ?? '0',['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'whatsapp_automation_enabled']) !!}
+                                                <label for="whatsapp_automation_enabled">Enable WhatsApp Automation</label>
+                                                <select name="whatsapp_automation_enabled" class="form-control selectpicker show-tick show-menu-arrow" id="whatsapp_automation_enabled">
+                                                    <option value="0" {{ ($settings['whatsapp_automation_enabled'] ?? '0') == '0' ? 'selected' : '' }}>Disabled</option>
+                                                    <option value="1" {{ ($settings['whatsapp_automation_enabled'] ?? '0') == '1' ? 'selected' : '' }}>Enabled</option>
+                                                </select>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_automation_interval','Automation Interval (minutes)') !!}
-                                                {!! Form::text('whatsapp_automation_interval',$settings['whatsapp_automation_interval'] ?? '30',['class'=>'form-control', 'id' => 'whatsapp_automation_interval', 'readonly' => '']) !!}
+                                                <label for="whatsapp_automation_interval">Automation Interval (minutes)</label>
+                                                <input type="text" name="whatsapp_automation_interval" value="{{ $settings['whatsapp_automation_interval'] ?? '30' }}" class="form-control" id="whatsapp_automation_interval" readonly>
                                                 <small class="help-block">How often the automation script runs (default: 30 minutes)</small>
                                             </div>
                                         </div>
@@ -250,16 +263,16 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_start_time','Start Time') !!}
-                                                {!! Form::time('whatsapp_start_time',$settings['whatsapp_start_time'] ?? '09:00',['class'=>'form-control', 'id' => 'whatsapp_start_time']) !!}
+                                                <label for="whatsapp_start_time">Start Time</label>
+                                                <input type="time" name="whatsapp_start_time" value="{{ $settings['whatsapp_start_time'] ?? '09:00' }}" class="form-control" id="whatsapp_start_time">
                                                 <small class="help-block">Earliest time to send messages (24-hour format, e.g., 09:00)</small>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_end_time','End Time') !!}
-                                                {!! Form::time('whatsapp_end_time',$settings['whatsapp_end_time'] ?? '21:00',['class'=>'form-control', 'id' => 'whatsapp_end_time']) !!}
+                                                <label for="whatsapp_end_time">End Time</label>
+                                                <input type="time" name="whatsapp_end_time" value="{{ $settings['whatsapp_end_time'] ?? '21:00' }}" class="form-control" id="whatsapp_end_time">
                                                 <small class="help-block">Latest time to send messages (24-hour format, e.g., 21:00)</small>
                                             </div>
                                         </div>
@@ -273,20 +286,20 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_api_key','WhatsApp API Key (Account SID)') !!}
-                                                {!! Form::text('whatsapp_api_key',$settings['whatsapp_api_key'] ?? '',['class'=>'form-control', 'id' => 'whatsapp_api_key']) !!}
+                                                <label for="whatsapp_api_key">WhatsApp API Key (Account SID)</label>
+                                                <input type="text" name="whatsapp_api_key" value="{{ $settings['whatsapp_api_key'] ?? '' }}" class="form-control" id="whatsapp_api_key">
                                                 <small class="help-block">Your Twilio Account SID (starts with "AC...")</small>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_api_secret','WhatsApp API Secret (Auth Token)') !!}
+                                                <label for="whatsapp_api_secret">WhatsApp API Secret (Auth Token)</label>
                                                 @if(isset($settings['whatsapp_api_secret']) && !empty($settings['whatsapp_api_secret']))
-                                                    {!! Form::text('whatsapp_api_secret',$settings['whatsapp_api_secret'],['class'=>'form-control', 'id' => 'whatsapp_api_secret', 'placeholder' => 'Enter your Twilio Auth Token']) !!}
+                                                    <input type="text" name="whatsapp_api_secret" value="{{ $settings['whatsapp_api_secret'] }}" class="form-control" id="whatsapp_api_secret" placeholder="Enter your Twilio Auth Token">
                                                     <small class="help-block">Your Twilio Auth Token (currently set - enter new value to update)</small>
                                                 @else
-                                                    {!! Form::text('whatsapp_api_secret','',['class'=>'form-control', 'id' => 'whatsapp_api_secret', 'placeholder' => 'Enter your Twilio Auth Token']) !!}
+                                                    <input type="text" name="whatsapp_api_secret" value="" class="form-control" id="whatsapp_api_secret" placeholder="Enter your Twilio Auth Token">
                                                     <small class="help-block">Your Twilio Auth Token (required for sending messages)</small>
                                                 @endif
                                             </div>
@@ -294,8 +307,8 @@
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_from_number','From Number') !!}
-                                                {!! Form::text('whatsapp_from_number',$settings['whatsapp_from_number'] ?? '',['class'=>'form-control', 'id' => 'whatsapp_from_number']) !!}
+                                                <label for="whatsapp_from_number">From Number</label>
+                                                <input type="text" name="whatsapp_from_number" value="{{ $settings['whatsapp_from_number'] ?? '' }}" class="form-control" id="whatsapp_from_number">
                                                 <small class="help-block">WhatsApp Business number to send from (e.g., +923001234567 for Pakistan)</small>
                                             </div>
                                         </div>
@@ -309,16 +322,16 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_reminder_2_days','Days for 2nd Reminder') !!}
-                                                {!! Form::text('whatsapp_reminder_2_days',$settings['whatsapp_reminder_2_days'] ?? '5',['class'=>'form-control', 'id' => 'whatsapp_reminder_2_days']) !!}
+                                                <label for="whatsapp_reminder_2_days">Days for 2nd Reminder</label>
+                                                <input type="text" name="whatsapp_reminder_2_days" value="{{ $settings['whatsapp_reminder_2_days'] ?? '5' }}" class="form-control" id="whatsapp_reminder_2_days">
                                                 <small class="help-block">Days after end date to send 2nd reminder</small>
                                             </div>
                                         </div>
 
                                         <div class="col-sm-4">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_reminder_3_days','Days for 3rd Reminder') !!}
-                                                {!! Form::text('whatsapp_reminder_3_days',$settings['whatsapp_reminder_3_days'] ?? '7',['class'=>'form-control', 'id' => 'whatsapp_reminder_3_days']) !!}
+                                                <label for="whatsapp_reminder_3_days">Days for 3rd Reminder</label>
+                                                <input type="text" name="whatsapp_reminder_3_days" value="{{ $settings['whatsapp_reminder_3_days'] ?? '7' }}" class="form-control" id="whatsapp_reminder_3_days">
                                                 <small class="help-block">Days after 2nd reminder to send 3rd reminder</small>
                                             </div>
                                         </div>
@@ -332,8 +345,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_reminder_1_message','First Reminder Message') !!}
-                                                {!! Form::textarea('whatsapp_reminder_1_message',$settings['whatsapp_reminder_1_message'] ?? '',['class'=>'form-control', 'id' => 'whatsapp_reminder_1_message', 'rows' => 3]) !!}
+                                                <label for="whatsapp_reminder_1_message">First Reminder Message</label>
+                                                <textarea name="whatsapp_reminder_1_message" class="form-control" id="whatsapp_reminder_1_message" rows="3">{{ $settings['whatsapp_reminder_1_message'] ?? '' }}</textarea>
                                                 <small class="help-block">Variables: {member_name}, {end_date}</small>
                                             </div>
                                         </div>
@@ -342,8 +355,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_reminder_2_message','Second Reminder Message') !!}
-                                                {!! Form::textarea('whatsapp_reminder_2_message',$settings['whatsapp_reminder_2_message'] ?? '',['class'=>'form-control', 'id' => 'whatsapp_reminder_2_message', 'rows' => 3]) !!}
+                                                <label for="whatsapp_reminder_2_message">Second Reminder Message</label>
+                                                <textarea name="whatsapp_reminder_2_message" class="form-control" id="whatsapp_reminder_2_message" rows="3">{{ $settings['whatsapp_reminder_2_message'] ?? '' }}</textarea>
                                                 <small class="help-block">Variables: {member_name}, {end_date}, {days_ago}</small>
                                             </div>
                                         </div>
@@ -352,8 +365,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('whatsapp_reminder_3_message','Third Reminder Message') !!}
-                                                {!! Form::textarea('whatsapp_reminder_3_message',$settings['whatsapp_reminder_3_message'] ?? '',['class'=>'form-control', 'id' => 'whatsapp_reminder_3_message', 'rows' => 3]) !!}
+                                                <label for="whatsapp_reminder_3_message">Third Reminder Message</label>
+                                                <textarea name="whatsapp_reminder_3_message" class="form-control" id="whatsapp_reminder_3_message" rows="3">{{ $settings['whatsapp_reminder_3_message'] ?? '' }}</textarea>
                                                 <small class="help-block">Variables: {member_name}, {end_date}, {days_ago}</small>
                                             </div>
                                         </div>
@@ -369,11 +382,11 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Save', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Save</button>
                     </div>
                 </div>
             </div>
-            {!! Form::Close() !!}
+            </form>
         </div>
     </div>
 @stop

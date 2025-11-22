@@ -16,7 +16,7 @@
                             <div class="panel-head font-size-20">Member Detail</div>
                             <div class="pull-right no-margin">
                                 @permission(['manage-gymie','manage-members','edit-member'])
-                                <a class="btn btn-primary" href="{{ action('MembersController@edit',['id' => $member->id]) }}">
+                                <a class="btn btn-primary" href="{{ action([App\Http\Controllers\MembersController::class, 'edit'], ['id' => $member->id]) }}">
                                     <span>Edit</span>
                                 </a>
                                 @endpermission
@@ -41,10 +41,11 @@
                                                 <p>Are you sure you want to delete it?</p>
                                             </div>
                                             <div class="modal-footer">
-                                                {!! Form::Open(['action'=>['MembersController@archive',$member->id],'method' => 'POST','id'=>'archiveform-'.$member->id]) !!}
+                                                <form action="{{ action([App\Http\Controllers\MembersController::class, 'archive'], ['id' => $member->id]) }}" method="POST" id="archiveform-{{ $member->id }}">
+                                                    @csrf
                                                 <input type="submit" class="btn btn-danger" value="Yes" id="btn-{{ $member->id }}"/>
                                                 <button type="button" class="btn btn-info" data-dismiss="modal">Cancel</button>
-                                                {!! Form::Close() !!}
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
@@ -363,7 +364,7 @@
                                 @foreach ($member->subscriptions->sortByDesc('created_at') as $subscription)
                                     <tr>
                                         <td>
-                                            <a href="{{ action('InvoicesController@show',['id' => $subscription->invoice_id]) }}">{{ $subscription->invoice->invoice_number }}</a>
+                                            <a href="{{ action([App\Http\Controllers\InvoicesController::class, 'show'], ['id' => $subscription->invoice_id]) }}">{{ $subscription->invoice->invoice_number }}</a>
                                         </td>
                                         <td>{{ $subscription->plan->plan_name }}</td>
                                         <td>{{ $subscription->start_date->format('d-m-Y') }}</td>
@@ -376,7 +377,7 @@
                                             @if($subscription->status == \constSubscription::onGoing)
                                                 @permission(['manage-gymie','manage-subscriptions','cancel-subscription'])
                                                 <button class="btn btn-xs btn-danger cancel-subscription"
-                                                        data-cancel-url="{{ action('SubscriptionsController@cancelSubscription', $subscription->id) }}"
+                                                        data-cancel-url="{{ action([App\Http\Controllers\SubscriptionsController::class, 'cancelSubscription'], ['id' => $subscription->id]) }}"
                                                         data-record-id="{{$subscription->id}}">
                                                     Cancel
                                                 </button>
@@ -394,14 +395,14 @@
                                                     <ul class="dropdown-menu" role="menu">
                                                         @permission(['manage-gymie','manage-subscriptions','renew-subscription'])
                                                         <li>
-                                                            <a href="{{ action('SubscriptionsController@renew',['id' => $subscription->invoice_id]) }}">
+                                                            <a href="{{ action([App\Http\Controllers\SubscriptionsController::class, 'renew'], ['id' => $subscription->invoice_id]) }}">
                                                                 Renew subscription
                                                             </a>
                                                         </li>
                                                         @endpermission
                                                         @permission(['manage-gymie','manage-subscriptions','change-subscription'])
                                                         <li>
-                                                            <a href="{{ action('SubscriptionsController@change',['id' => $subscription->id]) }}">
+                                                            <a href="{{ action([App\Http\Controllers\SubscriptionsController::class, 'change'], ['id' => $subscription->id]) }}">
                                                                 Upgrade/Downgrade
                                                             </a>
                                                         </li>
@@ -409,7 +410,7 @@
                                                         @if($subscription->invoice->discount_amount > 0)
                                                             @permission(['manage-gymie','manage-invoices','add-discount'])
                                                             <li>
-                                                                <a href="{{ action('InvoicesController@discount',['id' => $subscription->invoice->id]) }}">
+                                                                <a href="{{ action([App\Http\Controllers\InvoicesController::class, 'discount'], ['id' => $subscription->invoice->id]) }}">
                                                                     Edit Discount
                                                                 </a>
                                                             </li>
@@ -419,7 +420,7 @@
 
                                                             @permission(['manage-gymie','manage-invoices','add-discount'])
                                                             <li>
-                                                                <a href="{{ action('InvoicesController@discount',['id' => $subscription->invoice->id]) }}">
+                                                                <a href="{{ action([App\Http\Controllers\InvoicesController::class, 'discount'], ['id' => $subscription->invoice->id]) }}">
                                                                     Add Discount
                                                                 </a>
                                                             </li>
@@ -432,11 +433,11 @@
                                                         ?>
                                                         <li>
                                                             @if($firstPaymentDetail)
-                                                                <a href="{{ action('PaymentsController@edit',['id' => $firstPaymentDetail->id]) }}">
+                                                                <a href="{{ action([App\Http\Controllers\PaymentsController::class, 'edit'], ['id' => $firstPaymentDetail->id]) }}">
                                                                     Edit Payment
                                                                 </a>
                                                             @else
-                                                                <a href="{{ action('InvoicesController@createPayment',['id' => $subscription->invoice->id]) }}">
+                                                                <a href="{{ action([App\Http\Controllers\InvoicesController::class, 'createPayment'], ['id' => $subscription->invoice->id]) }}">
                                                                     Add Payment
                                                                 </a>
                                                             @endif
@@ -445,7 +446,7 @@
                                                         @permission(['manage-gymie','manage-subscriptions','cancel-subscription'])
                                                         <li>
                                                             <a href="#" class="cancel-subscription"
-                                                                data-cancel-url="{{ action('SubscriptionsController@cancelSubscription', $subscription->id) }}"
+                                                                data-cancel-url="{{ action([App\Http\Controllers\SubscriptionsController::class, 'cancelSubscription'], ['id' => $subscription->id]) }}"
                                                                 data-record-id="{{$subscription->id}}">
                                                                 Cancel subscription
                                                             </a>

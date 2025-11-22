@@ -6,16 +6,16 @@ use Auth;
 use Lubus\Constants\Status;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Zizaco\Entrust\Traits\EntrustUserTrait;
+use App\EntrustUserTrait;
 use Illuminate\Auth\Passwords\CanResetPassword;
-use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
-use Spatie\MediaLibrary\HasMedia\Interfaces\HasMediaConversions;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
-class User extends Model implements AuthenticatableContract, CanResetPasswordContract, HasMediaConversions
+class User extends Model implements AuthenticatableContract, CanResetPasswordContract, HasMedia
 {
-    use Authenticatable, CanResetPassword, EntrustUserTrait, HasMediaTrait;
+    use Authenticatable, CanResetPassword, EntrustUserTrait, InteractsWithMedia;
 
     /**
      * The database table used by the model.
@@ -39,14 +39,18 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
     protected $hidden = ['password', 'remember_token'];
 
     // Media i.e. Image size conversion
-    public function registerMediaConversions()
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-             ->setManipulations(['w' => 50, 'h' => 50, 'q' => 100, 'fit' => 'crop'])
+             ->width(50)
+             ->height(50)
+             ->quality(100)
              ->performOnCollections('staff');
 
         $this->addMediaConversion('form')
-             ->setManipulations(['w' => 70, 'h' => 70, 'q' => 100, 'fit' => 'crop'])
+             ->width(70)
+             ->height(70)
+             ->quality(100)
              ->performOnCollections('staff');
     }
 

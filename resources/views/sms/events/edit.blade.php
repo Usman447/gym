@@ -11,11 +11,11 @@
                             <div class="panel-head font-size-20">Enter details of the sms event</div>
                         </div>
 
-                        {!! Form::model($event, ['method' => 'POST','action' => ['SmsController@updateEvent',$event->id],'id'=>'smseventsform']) !!}
+                        <form action="{{ action(['App\Http\Controllers\SmsController@updateEvent', $event->id]) }}" method="POST" id="smseventsform">
+                            @csrf
+                            @method('PUT')
 
                         @include('sms.events._form',['submitButtonText' => 'Update'])
-
-                        {!! Form::Close() !!}
 
                         </form>
 

@@ -14,10 +14,11 @@
                 <div class="col-lg-12">
                     <div class="panel no-border ">
                         <div class="panel-body no-padding-top bg-white">
-                            {!! Form::Open(['method' => 'POST','action' => ['SmsController@triggerUpdate']]) !!}
+                            <form action="{{ action(['App\Http\Controllers\SmsController@triggerUpdate']) }}" method="POST">
+                                @csrf
                             <div class="row margin-top-15 margin-bottom-15">
                                 <div class="col-xs-12 col-md-3 pull-right">
-                                    {!! Form::submit('Save', ['class' => 'btn btn-sm btn-primary pull-right']) !!}
+                                    <button type="submit" class="btn btn-sm btn-primary pull-right">Save</button>
                                 </div>
                             </div>
 
@@ -54,7 +55,7 @@
                                     @endforeach
                                     </tbody>
                                 </table>
-                                {!! Form::Close() !!}
+                                </form>
                         </div>
                         @endif
                     </div>

@@ -218,7 +218,8 @@ class DashboardController extends Controller
     private function getFilteredRegistrationsTrend()
     {
         $user = Auth::user();
-        $startDate = new \Carbon\Carbon(\App\Setting::where('key', '=', 'financial_start')->pluck('value'));
+        $financialStart = \App\Setting::where('key', '=', 'financial_start')->value('value');
+        $startDate = $financialStart ? new \Carbon\Carbon($financialStart) : \Carbon\Carbon::now()->startOfYear();
         $data = [];
 
         for ($i = 1; $i <= 12; $i++) {

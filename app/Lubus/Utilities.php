@@ -21,7 +21,7 @@ class Utilities
     // Get Setting
     public static function getSetting($key)
     {
-        $settingValue = Setting::where('key', '=', $key)->pluck('value');
+        $settingValue = Setting::where('key', '=', $key)->value('value');
 
         return $settingValue;
     }

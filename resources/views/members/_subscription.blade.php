@@ -11,15 +11,15 @@ use Carbon\Carbon;
             <div class="panel-body">
                 <div class="row">
                     <div class="col-sm-5">
-                        {!! Form::label('plan_0','Plan') !!}
+                        <label for="plan_0">Plan</label>
                     </div>
 
                     <div class="col-sm-3">
-                        {!! Form::label('start_date_0','Start Date') !!}
+                        <label for="start_date_0">Start Date</label>
                     </div>
 
                     <div class="col-sm-3">
-                        {!! Form::label('end_date_0','End Date') !!}
+                        <label for="end_date_0">End Date</label>
                     </div>
 
                     <div class="col-sm-1">
@@ -40,20 +40,20 @@ use Carbon\Carbon;
                                     @endforeach
                                 </select>
                                 <div class="plan-price">
-                                    {!! Form::hidden('plan[0][price]','', array('id' => 'price_0')) !!}
+                                    <input type="hidden" name="plan[0][price]" value="" id="price_0">
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-sm-3">
                             <div class="form-group plan-start-date">
-                                {!! Form::text('plan[0][start_date]',Carbon::today()->format('Y-m-d'),['class'=>'form-control datepicker-startdate childStartDate', 'id' => 'start_date_0', 'data-row-id' => '0']) !!}
+                                <input type="text" name="plan[0][start_date]" value="{{ Carbon::today()->format('Y-m-d') }}" class="form-control datepicker-startdate childStartDate" id="start_date_0" data-row-id="0">
                             </div>
                         </div>
 
                         <div class="col-sm-3">
                             <div class="form-group plan-end-date">
-                                {!! Form::text('plan[0][end_date]',null,['class'=>'form-control childEndDate', 'id' => 'end_date_0', 'readonly' => 'readonly','data-row-id' => '0']) !!}
+                                <input type="text" name="plan[0][end_date]" value="" class="form-control childEndDate" id="end_date_0" readonly="readonly" data-row-id="0">
                             </div>
                         </div>
 

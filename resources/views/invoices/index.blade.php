@@ -28,11 +28,11 @@
 
                                 <div class="row">
                                     <div class="col-sm-12 no-padding">
-                                        {!! Form::Open(['method' => 'GET']) !!}
+                                        <form method="GET">
 
                                         <div class="col-sm-3">
 
-                                            {!! Form::label('invoice-daterangepicker','Date range') !!}
+                                            <label for="invoice-daterangepicker">Date range</label>
 
                                             <div id="invoice-daterangepicker"
                                                  class="gymie-daterangepicker btn bg-grey-50 daterange-padding no-border color-grey-600 hidden-xs no-shadow">
@@ -41,37 +41,51 @@
                                                 <i class="ion-ios-arrow-down margin-left-5"></i>
                                             </div>
 
-                                            {!! Form::text('drp_start',null,['class'=>'hidden', 'id' => 'drp_start']) !!}
-                                            {!! Form::text('drp_end',null,['class'=>'hidden', 'id' => 'drp_end']) !!}
+                                            <input type="text" name="drp_start" value="" class="hidden" id="drp_start">
+                                            <input type="text" name="drp_end" value="" class="hidden" id="drp_end">
                                         </div>
 
                                         <div class="col-sm-2">
-                                            {!! Form::label('sort_field','Sort By') !!}
-                                            {!! Form::select('sort_field',array('status' => 'Status','created_at' => 'Date','invoice_number' => 'Invoice number','member_name' => 'Member name'),old('sort_field'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'sort_field']) !!}
+                                            <label for="sort_field">Sort By</label>
+                                            <select name="sort_field" class="form-control selectpicker show-tick show-menu-arrow" id="sort_field">
+                                                <option value="status" {{ old('sort_field') == 'status' ? 'selected' : '' }}>Status</option>
+                                                <option value="created_at" {{ old('sort_field') == 'created_at' ? 'selected' : '' }}>Date</option>
+                                                <option value="invoice_number" {{ old('sort_field') == 'invoice_number' ? 'selected' : '' }}>Invoice number</option>
+                                                <option value="member_name" {{ old('sort_field') == 'member_name' ? 'selected' : '' }}>Member name</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-sm-2" id="status_filter_container" style="display: none;">
-                                            {!! Form::label('status_filter','Status Filter') !!}
-                                            {!! Form::select('status_filter',array('' => 'All Statuses', '0' => 'Unpaid', '1' => 'Paid', '2' => 'Partial', '3' => 'Overpaid'),old('status_filter'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status_filter']) !!}
+                                            <label for="status_filter">Status Filter</label>
+                                            <select name="status_filter" class="form-control selectpicker show-tick show-menu-arrow" id="status_filter">
+                                                <option value="" {{ old('status_filter') == '' ? 'selected' : '' }}>All Statuses</option>
+                                                <option value="0" {{ old('status_filter') == '0' ? 'selected' : '' }}>Unpaid</option>
+                                                <option value="1" {{ old('status_filter') == '1' ? 'selected' : '' }}>Paid</option>
+                                                <option value="2" {{ old('status_filter') == '2' ? 'selected' : '' }}>Partial</option>
+                                                <option value="3" {{ old('status_filter') == '3' ? 'selected' : '' }}>Overpaid</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-sm-2">
-                                            {!! Form::label('sort_direction','Order') !!}
-                                            {!! Form::select('sort_direction',array('desc' => 'Descending','asc' => 'Ascending'),old('sort_direction'),['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'sort_direction']) !!}</span>
+                                            <label for="sort_direction">Order</label>
+                                            <select name="sort_direction" class="form-control selectpicker show-tick show-menu-arrow" id="sort_direction">
+                                                <option value="desc" {{ old('sort_direction') == 'desc' ? 'selected' : '' }}>Descending</option>
+                                                <option value="asc" {{ old('sort_direction') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                                            </select>
                                         </div>
 
                                         <div class="col-xs-2">
-                                            {!! Form::label('search','Keyword') !!}
+                                            <label for="search">Keyword</label>
                                             <input value="{{ old('search') }}" name="search" id="search" type="text" class="form-control padding-right-35"
                                                    placeholder="Search...">
                                         </div>
 
                                         <div class="col-xs-2">
-                                            {!! Form::label('&nbsp;') !!} <br/>
+                                            <label>&nbsp;</label> <br/>
                                             <button type="submit" class="btn btn-primary active no-border">GO</button>
                                         </div>
 
-                                        {!! Form::Close() !!}
+                                        </form>
                                     </div>
                                 </div>
 
@@ -169,7 +183,7 @@
 
                                     <div class="col-xs-6">
                                         <div class="gymie_paging pull-right">
-                                            {!! str_replace('/?', '?', $invoices->appends(Input::Only(['search', 'sort_field', 'sort_direction', 'status_filter', 'drp_start', 'drp_end']))->render()) !!}
+                                            {!! str_replace('/?', '?', $invoices->appends(request()->only(['search', 'sort_field', 'sort_direction', 'status_filter', 'drp_start', 'drp_end']))->render()) !!}
                                         </div>
                                     </div>
                                 </div>

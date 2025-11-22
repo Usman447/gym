@@ -11,9 +11,39 @@
 |
 */
 
-$app = new Illuminate\Foundation\Application(
-    realpath(__DIR__.'/../')
-);
+$app = Illuminate\Foundation\Application::configure(
+    basePath: realpath(__DIR__.'/../')
+)->create();
+
+/*
+|--------------------------------------------------------------------------
+| Register Essential Service Providers Early
+|--------------------------------------------------------------------------
+|
+| Some service providers need to be registered before kernels can be resolved.
+| These providers register essential bindings that are needed during kernel
+| instantiation and early application bootstrapping.
+|
+*/
+
+// Register FoundationServiceProvider first - it provides 'config' and MaintenanceMode
+// Note: We need to load config first to avoid circular dependency
+if (! $app->bound('config')) {
+    $app->instance('config', new \Illuminate\Config\Repository);
+}
+
+$app->register(Illuminate\Foundation\Providers\FoundationServiceProvider::class);
+$app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
+$app->register(Illuminate\Database\DatabaseServiceProvider::class);
+$app->register(Illuminate\Encryption\EncryptionServiceProvider::class);
+$app->register(Illuminate\Cookie\CookieServiceProvider::class);
+$app->register(Illuminate\Session\SessionServiceProvider::class);
+$app->register(Illuminate\View\ViewServiceProvider::class);
+$app->register(Illuminate\Translation\TranslationServiceProvider::class);
+$app->register(Illuminate\Hashing\HashServiceProvider::class);
+$app->register(Illuminate\Validation\ValidationServiceProvider::class);
+$app->register(Illuminate\Auth\AuthServiceProvider::class);
+$app->register(Illuminate\Pagination\PaginationServiceProvider::class); // Required for pagination view factory resolver
 
 /*
 |--------------------------------------------------------------------------

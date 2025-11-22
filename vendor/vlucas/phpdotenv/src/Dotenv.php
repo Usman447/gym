@@ -1,307 +1,267 @@
 <?php
 
-/**
- * Dotenv.
- *
- * Loads a `.env` file in the given directory and sets the environment vars.
- */
+declare(strict_types=1);
+
+namespace Dotenv;
+
+use Dotenv\Exception\InvalidPathException;
+use Dotenv\Loader\Loader;
+use Dotenv\Loader\LoaderInterface;
+use Dotenv\Parser\Parser;
+use Dotenv\Parser\ParserInterface;
+use Dotenv\Repository\Adapter\ArrayAdapter;
+use Dotenv\Repository\Adapter\PutenvAdapter;
+use Dotenv\Repository\RepositoryBuilder;
+use Dotenv\Repository\RepositoryInterface;
+use Dotenv\Store\StoreBuilder;
+use Dotenv\Store\StoreInterface;
+use Dotenv\Store\StringStore;
+
 class Dotenv
 {
     /**
-     * If true, then environment variables will not be overwritten.
+     * The store instance.
      *
-     * @var bool
+     * @var \Dotenv\Store\StoreInterface
      */
-    protected static $immutable = true;
+    private $store;
 
     /**
-     * Load `.env` file in given directory.
+     * The parser instance.
      *
-     * @param string $path
-     * @param string $file
+     * @var \Dotenv\Parser\ParserInterface
+     */
+    private $parser;
+
+    /**
+     * The loader instance.
+     *
+     * @var \Dotenv\Loader\LoaderInterface
+     */
+    private $loader;
+
+    /**
+     * The repository instance.
+     *
+     * @var \Dotenv\Repository\RepositoryInterface
+     */
+    private $repository;
+
+    /**
+     * Create a new dotenv instance.
+     *
+     * @param \Dotenv\Store\StoreInterface           $store
+     * @param \Dotenv\Parser\ParserInterface         $parser
+     * @param \Dotenv\Loader\LoaderInterface         $loader
+     * @param \Dotenv\Repository\RepositoryInterface $repository
      *
      * @return void
      */
-    public static function load($path, $file = '.env')
-    {
-        if (!is_string($file)) {
-            $file = '.env';
-        }
-
-        $filePath = rtrim($path, '/').'/'.$file;
-        if (!is_readable($filePath) || !is_file($filePath)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Dotenv: Environment file %s not found or not readable. '.
-                    'Create file with your environment settings at %s',
-                    $file,
-                    $filePath
-                )
-            );
-        }
-
-        // Read file into an array of lines with auto-detected line endings
-        $autodetect = ini_get('auto_detect_line_endings');
-        ini_set('auto_detect_line_endings', '1');
-        $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        ini_set('auto_detect_line_endings', $autodetect);
-
-        foreach ($lines as $line) {
-            // Disregard comments
-            if (strpos(trim($line), '#') === 0) {
-                continue;
-            }
-            // Only use non-empty lines that look like setters
-            if (strpos($line, '=') !== false) {
-                static::setEnvironmentVariable($line);
-            }
-        }
+    public function __construct(
+        StoreInterface $store,
+        ParserInterface $parser,
+        LoaderInterface $loader,
+        RepositoryInterface $repository
+    ) {
+        $this->store = $store;
+        $this->parser = $parser;
+        $this->loader = $loader;
+        $this->repository = $repository;
     }
 
     /**
-     * Set a variable.
+     * Create a new dotenv instance.
      *
-     * Variable set using:
-     * - putenv
-     * - $_ENV
-     * - $_SERVER.
+     * @param \Dotenv\Repository\RepositoryInterface $repository
+     * @param string|string[]                        $paths
+     * @param string|string[]|null                   $names
+     * @param bool                                   $shortCircuit
+     * @param string|null                            $fileEncoding
      *
-     * The environment variable value is stripped of single and double quotes.
-     *
-     * @param string      $name
-     * @param string|null $value
-     *
-     * @return void
+     * @return \Dotenv\Dotenv
      */
-    public static function setEnvironmentVariable($name, $value = null)
+    public static function create(RepositoryInterface $repository, $paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        list($name, $value) = static::normaliseEnvironmentVariable($name, $value);
+        $builder = $names === null ? StoreBuilder::createWithDefaultName() : StoreBuilder::createWithNoNames();
 
-        // Don't overwrite existing environment variables if we're immutable
-        // Ruby's dotenv does this with `ENV[key] ||= value`.
-        if (static::$immutable === true && !is_null(static::findEnvironmentVariable($name))) {
-            return;
+        foreach ((array) $paths as $path) {
+            $builder = $builder->addPath($path);
         }
 
-        putenv("$name=$value");
-        $_ENV[$name] = $value;
-        $_SERVER[$name] = $value;
+        foreach ((array) $names as $name) {
+            $builder = $builder->addName($name);
+        }
+
+        if ($shortCircuit) {
+            $builder = $builder->shortCircuit();
+        }
+
+        return new self($builder->fileEncoding($fileEncoding)->make(), new Parser(), new Loader(), $repository);
     }
 
     /**
-     * Require specified ENV vars to be present, or throw an exception.
+     * Create a new mutable dotenv instance with default repository.
      *
-     * You can also pass through an set of allowed values for the environment variable.
+     * @param string|string[]      $paths
+     * @param string|string[]|null $names
+     * @param bool                 $shortCircuit
+     * @param string|null          $fileEncoding
      *
-     * @param mixed    $environmentVariables
-     * @param string[] $allowedValues
-     *
-     * @throws \RuntimeException
-     *
-     * @return true
+     * @return \Dotenv\Dotenv
      */
-    public static function required($environmentVariables, array $allowedValues = array())
+    public static function createMutable($paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        $environmentVariables = (array) $environmentVariables;
-        $missingEnvironmentVariables = array();
+        $repository = RepositoryBuilder::createWithDefaultAdapters()->make();
 
-        foreach ($environmentVariables as $environmentVariable) {
-            $value = static::findEnvironmentVariable($environmentVariable);
-            if (is_null($value)) {
-                $missingEnvironmentVariables[] = $environmentVariable;
-            } elseif ($allowedValues) {
-                if (!in_array($value, $allowedValues)) {
-                    // may differentiate in the future, but for now this does the job
-                    $missingEnvironmentVariables[] = $environmentVariable;
-                }
-            }
-        }
-
-        if ($missingEnvironmentVariables) {
-            throw new \RuntimeException(
-                sprintf(
-                    "Required environment variable missing, or value not allowed: '%s'",
-                    implode("', '", $missingEnvironmentVariables)
-                )
-            );
-        }
-
-        return true;
+        return self::create($repository, $paths, $names, $shortCircuit, $fileEncoding);
     }
 
     /**
-     * Takes value as passed in by developer.
+     * Create a new mutable dotenv instance with default repository with the putenv adapter.
      *
-     * We're also:
-     * - ensuring we're dealing with a separate name and value, breaking apart the name string if needed
-     * - cleaning the value of quotes
-     * - cleaning the name of quotes
-     * - resolving nested variables
+     * @param string|string[]      $paths
+     * @param string|string[]|null $names
+     * @param bool                 $shortCircuit
+     * @param string|null          $fileEncoding
      *
-     * @param string $name
-     * @param string $value
-     *
-     * @return array
+     * @return \Dotenv\Dotenv
      */
-    protected static function normaliseEnvironmentVariable($name, $value)
+    public static function createUnsafeMutable($paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        list($name, $value) = static::splitCompoundStringIntoParts($name, $value);
-        $name = static::sanitiseVariableName($name);
-        $value = static::sanitiseVariableValue($value);
-        $value = static::resolveNestedVariables($value);
+        $repository = RepositoryBuilder::createWithDefaultAdapters()
+            ->addAdapter(PutenvAdapter::class)
+            ->make();
 
-        return array($name, $value);
+        return self::create($repository, $paths, $names, $shortCircuit, $fileEncoding);
     }
 
     /**
-     * If the $name contains an = sign, then we split it into 2 parts, a name & value.
+     * Create a new immutable dotenv instance with default repository.
      *
-     * @param string $name
-     * @param string $value
+     * @param string|string[]      $paths
+     * @param string|string[]|null $names
+     * @param bool                 $shortCircuit
+     * @param string|null          $fileEncoding
      *
-     * @return array
+     * @return \Dotenv\Dotenv
      */
-    protected static function splitCompoundStringIntoParts($name, $value)
+    public static function createImmutable($paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        if (strpos($name, '=') !== false) {
-            list($name, $value) = array_map('trim', explode('=', $name, 2));
-        }
+        $repository = RepositoryBuilder::createWithDefaultAdapters()->immutable()->make();
 
-        return array($name, $value);
+        return self::create($repository, $paths, $names, $shortCircuit, $fileEncoding);
     }
 
     /**
-     * Strips quotes from the environment variable value.
+     * Create a new immutable dotenv instance with default repository with the putenv adapter.
      *
-     * @param string $value
+     * @param string|string[]      $paths
+     * @param string|string[]|null $names
+     * @param bool                 $shortCircuit
+     * @param string|null          $fileEncoding
      *
-     * @return string
+     * @return \Dotenv\Dotenv
      */
-    protected static function sanitiseVariableValue($value)
+    public static function createUnsafeImmutable($paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        $value = trim($value);
-        if (!$value) {
-            return '';
-        }
-        if (strpbrk($value[0], '"\'') !== false) { // value starts with a quote
-            $quote = $value[0];
-            $regexPattern = sprintf('/^
-                %1$s          # match a quote at the start of the value
-                (             # capturing sub-pattern used
-                 (?:          # we do not need to capture this
-                  [^%1$s\\\\] # any character other than a quote or backslash
-                  |\\\\\\\\   # or two backslashes together
-                  |\\\\%1$s   # or an escaped quote e.g \"
-                 )*           # as many characters that match the previous rules
-                )             # end of the capturing sub-pattern
-                %1$s          # and the closing quote
-                .*$           # and discard any string after the closing quote
-                /mx', $quote);
-            $value = preg_replace($regexPattern, '$1', $value);
-            $value = str_replace("\\$quote", $quote, $value);
-            $value = str_replace('\\\\', '\\', $value);
-        } else {
-            $parts = explode(' #', $value, 2);
-            $value = $parts[0];
-        }
+        $repository = RepositoryBuilder::createWithDefaultAdapters()
+            ->addAdapter(PutenvAdapter::class)
+            ->immutable()
+            ->make();
 
-        return trim($value);
+        return self::create($repository, $paths, $names, $shortCircuit, $fileEncoding);
     }
 
     /**
-     * Strips quotes and the optional leading "export " from the environment variable name.
+     * Create a new dotenv instance with an array backed repository.
      *
-     * @param string $name
+     * @param string|string[]      $paths
+     * @param string|string[]|null $names
+     * @param bool                 $shortCircuit
+     * @param string|null          $fileEncoding
      *
-     * @return string
+     * @return \Dotenv\Dotenv
      */
-    protected static function sanitiseVariableName($name)
+    public static function createArrayBacked($paths, $names = null, bool $shortCircuit = true, ?string $fileEncoding = null)
     {
-        return trim(str_replace(array('export ', '\'', '"'), '', $name));
+        $repository = RepositoryBuilder::createWithNoAdapters()->addAdapter(ArrayAdapter::class)->make();
+
+        return self::create($repository, $paths, $names, $shortCircuit, $fileEncoding);
     }
 
     /**
-     * Look for {$varname} patterns in the variable value.
+     * Parse the given content and resolve nested variables.
      *
-     * Replace with an existing environment variable.
+     * This method behaves just like load(), only without mutating your actual
+     * environment. We do this by using an array backed repository.
      *
-     * @param string $value
+     * @param string $content
      *
-     * @return mixed
+     * @throws \Dotenv\Exception\InvalidFileException
+     *
+     * @return array<string, string|null>
      */
-    protected static function resolveNestedVariables($value)
+    public static function parse(string $content)
     {
-        if (strpos($value, '$') !== false) {
-            $value = preg_replace_callback(
-                '/{\$([a-zA-Z0-9_]+)}/',
-                function ($matchedPatterns) {
-                    $nestedVariable = Dotenv::findEnvironmentVariable($matchedPatterns[1]);
-                    if (is_null($nestedVariable)) {
-                        return $matchedPatterns[0];
-                    } else {
-                        return  $nestedVariable;
-                    }
-                },
-                $value
-            );
-        }
+        $repository = RepositoryBuilder::createWithNoAdapters()->addAdapter(ArrayAdapter::class)->make();
 
-        return $value;
+        $phpdotenv = new self(new StringStore($content), new Parser(), new Loader(), $repository);
+
+        return $phpdotenv->load();
     }
 
     /**
-     * Search the different places for environment variables and return first value found.
+     * Read and load environment file(s).
      *
-     * @param string $name
+     * @throws \Dotenv\Exception\InvalidPathException|\Dotenv\Exception\InvalidEncodingException|\Dotenv\Exception\InvalidFileException
      *
-     * @return string
+     * @return array<string, string|null>
      */
-    public static function findEnvironmentVariable($name)
+    public function load()
     {
-        switch (true) {
-            case array_key_exists($name, $_ENV):
-                return $_ENV[$name];
-            case array_key_exists($name, $_SERVER):
-                return $_SERVER[$name];
-            default:
-                $value = getenv($name);
-                return $value === false ? null : $value; // switch getenv default to null
+        $entries = $this->parser->parse($this->store->read());
+
+        return $this->loader->load($this->repository, $entries);
+    }
+
+    /**
+     * Read and load environment file(s), silently failing if no files can be read.
+     *
+     * @throws \Dotenv\Exception\InvalidEncodingException|\Dotenv\Exception\InvalidFileException
+     *
+     * @return array<string, string|null>
+     */
+    public function safeLoad()
+    {
+        try {
+            return $this->load();
+        } catch (InvalidPathException $e) {
+            // suppressing exception
+            return [];
         }
     }
 
     /**
-     * Check Dotenv immutable status.
+     * Required ensures that the specified variables exist, and returns a new validator object.
      *
-     * Returns true if immutable, false if mutable.
+     * @param string|string[] $variables
      *
-     * @return bool
+     * @return \Dotenv\Validator
      */
-    public static function isImmutable()
+    public function required($variables)
     {
-        return static::$immutable;
+        return (new Validator($this->repository, (array) $variables))->required();
     }
 
     /**
-     * Make Dotenv immutable.
+     * Returns a new validator object that won't check if the specified variables exist.
      *
-     * This means that once set, an environment variable cannot be overridden.
+     * @param string|string[] $variables
      *
-     * @return void
+     * @return \Dotenv\Validator
      */
-    public static function makeImmutable()
+    public function ifPresent($variables)
     {
-        static::$immutable = true;
-    }
-
-    /**
-     * Make Dotenv mutable.
-     *
-     * Environment variables will act as, well, variables.
-     *
-     * @return void
-     */
-    public static function makeMutable()
-    {
-        static::$immutable = false;
+        return new Validator($this->repository, (array) $variables);
     }
 }

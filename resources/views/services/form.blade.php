@@ -2,15 +2,15 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('name','Service Name') !!}
-                {!! Form::text('name',null,['class'=>'form-control', 'id' => 'name']) !!}
+                <label for="name">Service Name</label>
+                <input type="text" name="name" value="{{ old('name', isset($service) ? $service->name : '') }}" class="form-control" id="name">
             </div>
         </div>
 
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('description','Service Description') !!}
-                {!! Form::text('description',null,['class'=>'form-control', 'id' => 'description']) !!}
+                <label for="description">Service Description</label>
+                <input type="text" name="description" value="{{ old('description', isset($service) ? $service->description : '') }}" class="form-control" id="description">
             </div>
         </div>
     </div>
@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="form-group">
-                {!! Form::submit($submitButtonText, ['class' => 'btn btn-primary pull-right']) !!}
+                <button type="submit" class="btn btn-primary pull-right">{{ $submitButtonText }}</button>
             </div>
         </div>
     </div>

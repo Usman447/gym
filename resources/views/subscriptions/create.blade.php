@@ -18,8 +18,9 @@
                 </div>
             @endif
 
-            {!! Form::Open(['url' => 'subscriptions','id'=>'subscriptionsform']) !!}
-            {!! Form::hidden('invoiceCounter',$invoiceCounter) !!}
+            <form action="{{ url('subscriptions') }}" method="POST" id="subscriptionsform">
+                @csrf
+                <input type="hidden" name="invoiceCounter" value="{{ $invoiceCounter }}">
 
         <!-- Member Details -->
             <div class="row">
@@ -46,12 +47,12 @@
                 <div class="row">
                     <div class="col-sm-2 pull-right">
                         <div class="form-group">
-                            {!! Form::submit('Create', ['class' => 'btn btn-primary pull-right']) !!}
+                            <button type="submit" class="btn btn-primary pull-right">Create</button>
                         </div>
                     </div>
                 </div>
 
-                {!! Form::Close() !!}
+                </form>
 
             @endif
 

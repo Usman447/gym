@@ -3,13 +3,11 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $table = 'trn_expenses';
@@ -72,5 +70,23 @@ class Expense extends Model
                 $drp_end,
             ])->orderBy($sorting_field, $sorting_direction);
         }
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('trn_expenses.name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('trn_expenses.amount', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

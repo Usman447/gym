@@ -1,4 +1,6 @@
-<?php namespace Barryvdh\Debugbar;
+<?php
+
+namespace Barryvdh\Debugbar;
 
 use DebugBar\DebugBar;
 use DebugBar\JavascriptRenderer as BaseJavascriptRenderer;
@@ -18,8 +20,10 @@ class JavascriptRenderer extends BaseJavascriptRenderer
         parent::__construct($debugBar, $baseUrl, $basePath);
 
         $this->cssFiles['laravel'] = __DIR__ . '/Resources/laravel-debugbar.css';
-        $this->cssVendors['fontawesome'] = __DIR__ . '/Resources/vendor/font-awesome/style.css';
-        $this->jsFiles['laravel-sql'] = __DIR__ . '/Resources/sqlqueries/widget.js';
+        $this->jsFiles['laravel-cache'] = __DIR__ . '/Resources/cache/widget.js';
+        $this->jsFiles['laravel-queries'] = __DIR__ . '/Resources/queries/widget.js';
+
+        $this->setTheme(config('debugbar.theme', 'auto'));
     }
 
     /**
@@ -30,7 +34,6 @@ class JavascriptRenderer extends BaseJavascriptRenderer
      */
     public function setUrlGenerator($url)
     {
-
     }
 
     /**
@@ -38,27 +41,45 @@ class JavascriptRenderer extends BaseJavascriptRenderer
      */
     public function renderHead()
     {
-        $cssRoute = route('debugbar.assets.css', [
-            'v' => $this->getModifiedTime('css')
-        ]);
+        $cssRoute = preg_replace('/\Ahttps?:\/\/[^\/]+/', '', route('debugbar.assets.css', [
+            'v' => $this->getModifiedTime('css'),
+        ]));
 
-        $jsRoute = route('debugbar.assets.js', [
+        $jsRoute = preg_replace('/\Ahttps?:\/\/[^\/]+/', '', route('debugbar.assets.js', [
             'v' => $this->getModifiedTime('js')
-        ]);
+        ]));
 
-        $cssRoute = preg_replace('/\Ahttps?:/', '', $cssRoute);
-        $jsRoute  = preg_replace('/\Ahttps?:/', '', $jsRoute);
+        $nonce = $this->getNonceAttribute();
 
-        $html  = "<link rel='stylesheet' type='text/css' property='stylesheet' href='{$cssRoute}'>";
-        $html .= "<script type='text/javascript' src='{$jsRoute}'></script>";
+        $html  = "<link rel='stylesheet' type='text/css' property='stylesheet' href='{$cssRoute}' data-turbolinks-eval='false' data-turbo-eval='false'>";
+        $html .= "<script{$nonce} src='{$jsRoute}' data-turbolinks-eval='false' data-turbo-eval='false'></script>";
 
         if ($this->isJqueryNoConflictEnabled()) {
-            $html .= '<script type="text/javascript">jQuery.noConflict(true);</script>' . "\n";
+            $html .= "<script{$nonce} data-turbo-eval='false'>jQuery.noConflict(true);</script>" . "\n";
         }
+
+        $inlineHtml = $this->getInlineHtml();
+        if ($nonce != '') {
+            $inlineHtml = preg_replace("/<(script|style)>/", "<$1{$nonce}>", $inlineHtml);
+        }
+        $html .= $inlineHtml;
+
 
         return $html;
     }
 
+    protected function getInlineHtml()
+    {
+        $html = '';
+
+        foreach (['head', 'css', 'js'] as $asset) {
+            foreach ($this->getAssets('inline_' . $asset) as $item) {
+                $html .= $item . "\n";
+            }
+        }
+
+        return $html;
+    }
     /**
      * Get the last modified time of any assets.
      *
@@ -118,7 +139,7 @@ class JavascriptRenderer extends BaseJavascriptRenderer
             return $uris;
         }
 
-        if (substr($uri, 0, 1) === '/' || preg_match('/^([a-zA-Z]+:\/\/|[a-zA-Z]:\/|[a-zA-Z]:\\\)/', $uri)) {
+        if (substr($uri ?? '', 0, 1) === '/' || preg_match('/^([a-zA-Z]+:\/\/|[a-zA-Z]:\/|[a-zA-Z]:\\\)/', $uri ?? '')) {
             return $uri;
         }
         return rtrim($root, '/') . "/$uri";

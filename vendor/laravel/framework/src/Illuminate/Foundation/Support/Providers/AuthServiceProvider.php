@@ -2,36 +2,49 @@
 
 namespace Illuminate\Foundation\Support\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 
 class AuthServiceProvider extends ServiceProvider
 {
     /**
      * The policy mappings for the application.
      *
-     * @var array
+     * @var array<class-string, class-string>
      */
     protected $policies = [];
 
     /**
      * Register the application's policies.
      *
-     * @param  \Illuminate\Contracts\Auth\Access\Gate  $gate
      * @return void
      */
-    public function registerPolicies(GateContract $gate)
+    public function register()
     {
-        foreach ($this->policies as $key => $value) {
-            $gate->policy($key, $value);
+        $this->booting(function () {
+            $this->registerPolicies();
+        });
+    }
+
+    /**
+     * Register the application's policies.
+     *
+     * @return void
+     */
+    public function registerPolicies()
+    {
+        foreach ($this->policies() as $model => $policy) {
+            Gate::policy($model, $policy);
         }
     }
 
     /**
-     * {@inheritdoc}
+     * Get the policies defined on the provider.
+     *
+     * @return array<class-string, class-string>
      */
-    public function register()
+    public function policies()
     {
-        //
+        return $this->policies;
     }
 }

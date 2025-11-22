@@ -1,19 +1,23 @@
-## Laravel Debugbar
-[![Packagist License](https://poser.pugx.org/barryvdh/laravel-debugbar/license.png)](http://choosealicense.com/licenses/mit/)
-[![Latest Stable Version](https://poser.pugx.org/barryvdh/laravel-debugbar/version.png)](https://packagist.org/packages/barryvdh/laravel-debugbar)
-[![Total Downloads](https://poser.pugx.org/barryvdh/laravel-debugbar/d/total.png)](https://packagist.org/packages/barryvdh/laravel-debugbar)
+## Debugbar for Laravel
+![Unit Tests](https://github.com/barryvdh/laravel-debugbar/workflows/Unit%20Tests/badge.svg)
+[![Packagist License](https://img.shields.io/badge/Licence-MIT-blue)](http://choosealicense.com/licenses/mit/)
+[![Latest Stable Version](https://img.shields.io/packagist/v/barryvdh/laravel-debugbar?label=Stable)](https://packagist.org/packages/barryvdh/laravel-debugbar)
+[![Total Downloads](https://img.shields.io/packagist/dt/barryvdh/laravel-debugbar?label=Downloads)](https://packagist.org/packages/barryvdh/laravel-debugbar)
+[![Fruitcake](https://img.shields.io/badge/Powered%20By-Fruitcake-b2bc35.svg)](https://fruitcake.nl/)
 
-### For Laravel 4, please use the [1.8 branch](https://github.com/barryvdh/laravel-debugbar/tree/1.8)!
-
-This is a package to integrate [PHP Debug Bar](http://phpdebugbar.com/) with Laravel 5.
+This is a package to integrate [PHP Debug Bar](https://github.com/php-debugbar/php-debugbar) with Laravel.
 It includes a ServiceProvider to register the debugbar and attach it to the output. You can publish assets and configure it through Laravel.
 It bootstraps some Collectors to work with Laravel and implements a couple custom DataCollectors, specific for Laravel.
-It is configured to display Redirects and (jQuery) Ajax Requests. (Shown in a dropdown)
+It is configured to display Redirects and Ajax/Livewire Requests. (Shown in a dropdown)
 Read [the documentation](http://phpdebugbar.com/docs/) for more configuration options.
 
-![Screenshot](https://cloud.githubusercontent.com/assets/973269/4270452/740c8c8c-3ccb-11e4-8d9a-5a9e64f19351.png)
+![Debugbar Dark Mode screenshot](https://github.com/barryvdh/laravel-debugbar/assets/973269/6600837a-8b2d-4acb-ab0c-158c9ca5439c)
 
-Note: Use the DebugBar only in development. It can slow the application down (because it has to gather data). So when experiencing slowness, try disabling some of the collectors.
+> [!CAUTION]
+> Use the DebugBar only in development. Do not use Debugbar on publicly accessible websites, as it will leak information from stored requests (by design).
+
+> [!WARNING]
+>  It can also slow the application down (because it has to gather and render data). So when experiencing slowness, try disabling some of the collectors.
 
 This package includes some custom collectors:
  - QueryCollector: Show all queries, including binding + timing
@@ -25,10 +29,11 @@ This package includes some custom collectors:
  - LogsCollector: Show the latest log entries from the storage logs. (disabled by default)
  - FilesCollector: Show the files that are included/required by PHP. (disabled by default)
  - ConfigCollector: Display the values from the config files. (disabled by default)
+ - CacheCollector: Display all cache events. (disabled by default)
 
 Bootstraps the following collectors for Laravel:
  - LogCollector: Show all Log messages
- - SwiftMailCollector and SwiftLogCollector for Mail
+ - SymfonyMailCollector for Mail
 
 And the default collectors:
  - PhpInfoCollector
@@ -37,40 +42,58 @@ And the default collectors:
  - MemoryCollector
  - ExceptionsCollector
 
-It also provides a Facade interface for easy logging Messages, Exceptions and Time
+It also provides a facade interface (`Debugbar`) for easy logging Messages, Exceptions and Time
 
 ## Installation
 
-Require this package with composer:
+Require this package with composer. It is recommended to only require the package for development.
 
 ```shell
-composer require barryvdh/laravel-debugbar
+composer require barryvdh/laravel-debugbar --dev
 ```
 
-After updating composer, add the ServiceProvider to the providers array in config/app.php
+Laravel uses Package Auto-Discovery, so doesn't require you to manually add the ServiceProvider.
+
+The Debugbar will be enabled when `APP_DEBUG` is `true`.
 
 > If you use a catch-all/fallback route, make sure you load the Debugbar ServiceProvider before your own App ServiceProviders.
 
-### Laravel 5.x:
+### Laravel without auto-discovery:
+
+If you don't use auto-discovery, add the ServiceProvider to the providers list. For Laravel 11 or newer, add the ServiceProvider in bootstrap/providers.php. For Laravel 10 or older, add the ServiceProvider in config/app.php.
 
 ```php
 Barryvdh\Debugbar\ServiceProvider::class,
 ```
 
-If you want to use the facade to log messages, add this to your facades in app.php:
+If you want to use the facade to log messages, add this within the `register` method of `app/Providers/AppServiceProvider.php` class:
 
 ```php
-'Debugbar' => Barryvdh\Debugbar\Facade::class,
+public function register(): void
+{
+    $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+    $loader->alias('Debugbar', \Barryvdh\Debugbar\Facades\Debugbar::class);
+}
 ```
 
-The profiler is enabled by default, if you have app.debug=true. You can override that in the config (`debugbar.enabled`). See more options in `config/debugbar.php`
+The profiler is enabled by default, if you have APP_DEBUG=true. You can override that in the config (`debugbar.enabled`) or by setting `DEBUGBAR_ENABLED` in your `.env`. See more options in `config/debugbar.php`
 You can also set in your config if you want to include/exclude the vendor files also (FontAwesome, Highlight.js and jQuery). If you already use them in your site, set it to false.
 You can also only display the js or css vendors, by setting it to 'js' or 'css'. (Highlight.js requires both css + js, so set to `true` for syntax highlighting)
 
-Copy the package config to your local config with the publish command:
+#### Copy the package config to your local config with the publish command:
 
 ```shell
 php artisan vendor:publish --provider="Barryvdh\Debugbar\ServiceProvider"
+```
+
+### Laravel with Octane:
+
+Make sure to add LaravelDebugbar to your flush list in `config/octane.php`.
+
+```php
+    'flush' => [
+        \Barryvdh\Debugbar\LaravelDebugbar::class,
+    ],
 ```
 
 ### Lumen:
@@ -127,6 +150,9 @@ There are also helper functions available for the most common calls:
 // All arguments will be dumped as a debug message
 debug($var1, $someString, $intValue, $object);
 
+// `$collection->debug()` will return the collection and dump it as a debug message. Like `$collection->dump()`
+collect([$var1, $someString])->debug();
+
 start_measure('render','Time for rendering');
 stop_measure('render');
 add_measure('now', LARAVEL_START, microtime(true));
@@ -164,6 +190,12 @@ You can enable or disable the debugbar during run time.
 
 NB. Once enabled, the collectors are added (and could produce extra overhead), so if you want to use the debugbar in production, disable in the config and only enable when needed.
 
+## Storage
+
+Debugbar remembers previous requests, which you can view using the Browse button on the right. This will only work if you enable `debugbar.storage.open` in the config. 
+Make sure you only do this on local development, because otherwise other people will be able to view previous requests.
+In general, Debugbar should only be used locally or at least restricted by IP.
+It's possible to pass a callback, which will receive the Request object, so you can determine access to the OpenHandler storage.
 
 ## Twig Integration
 
@@ -192,3 +224,7 @@ The Stopwatch extension adds a [stopwatch tag](http://symfony.com/blog/new-in-sy
     …some things that gets timed
 {% endstopwatch %}
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=barryvdh/laravel-debugbar&type=Date)](https://www.star-history.com/#barryvdh/laravel-debugbar&Date)

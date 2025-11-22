@@ -37,8 +37,8 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        {!! Form::label('parameter', 'Enter Parameter to Pass to Python:') !!}
-                                        {!! Form::text('parameter', null, ['class' => 'form-control', 'id' => 'parameter', 'placeholder' => 'e.g., Hello World or 123']) !!}
+                                        <label for="parameter">Enter Parameter to Pass to Python:</label>
+                                        <input type="text" name="parameter" value="" class="form-control" id="parameter" placeholder="e.g., Hello World or 123">
                                         <small class="help-block">This value will be passed to the Python script</small>
                                     </div>
                                 </div>

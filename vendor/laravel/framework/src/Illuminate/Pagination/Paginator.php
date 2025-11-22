@@ -2,16 +2,28 @@
 
 namespace Illuminate\Pagination;
 
-use Countable;
 use ArrayAccess;
-use IteratorAggregate;
-use Illuminate\Support\Collection;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Pagination\Presenter;
+use Countable;
 use Illuminate\Contracts\Pagination\Paginator as PaginatorContract;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Support\Collection;
+use IteratorAggregate;
+use JsonSerializable;
 
-class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, PaginatorContract
+/**
+ * @template TKey of array-key
+ *
+ * @template-covariant TValue
+ *
+ * @extends AbstractPaginator<TKey, TValue>
+ *
+ * @implements Arrayable<TKey, TValue>
+ * @implements ArrayAccess<TKey, TValue>
+ * @implements IteratorAggregate<TKey, TValue>
+ * @implements PaginatorContract<TKey, TValue>
+ */
+class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Countable, IteratorAggregate, Jsonable, JsonSerializable, PaginatorContract
 {
     /**
      * Determine if there are more items in the data source.
@@ -23,24 +35,25 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     /**
      * Create a new paginator instance.
      *
-     * @param  mixed  $items
+     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>  $items
      * @param  int  $perPage
      * @param  int|null  $currentPage
-     * @param  array  $options (path, query, fragment, pageName)
+     * @param  array  $options  (path, query, fragment, pageName)
      * @return void
      */
     public function __construct($items, $perPage, $currentPage = null, array $options = [])
     {
+        $this->options = $options;
+
         foreach ($options as $key => $value) {
             $this->{$key} = $value;
         }
 
         $this->perPage = $perPage;
         $this->currentPage = $this->setCurrentPage($currentPage);
-        $this->path = $this->path != '/' ? rtrim($this->path, '/') : $this->path;
-        $this->items = $items instanceof Collection ? $items : Collection::make($items);
+        $this->path = $this->path !== '/' ? rtrim($this->path, '/') : $this->path;
 
-        $this->checkForMorePages();
+        $this->setItems($items);
     }
 
     /**
@@ -57,13 +70,16 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Check for more pages. The last item will be sliced off.
+     * Set the items for the paginator.
      *
+     * @param  Collection<TKey, TValue>|Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $items
      * @return void
      */
-    protected function checkForMorePages()
+    protected function setItems($items)
     {
-        $this->hasMore = count($this->items) > ($this->perPage);
+        $this->items = $items instanceof Collection ? $items : new Collection($items);
+
+        $this->hasMore = $this->items->count() > $this->perPage;
 
         $this->items = $this->items->slice(0, $this->perPage);
     }
@@ -75,9 +91,48 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
      */
     public function nextPageUrl()
     {
-        if ($this->hasMore) {
+        if ($this->hasMorePages()) {
             return $this->url($this->currentPage() + 1);
         }
+    }
+
+    /**
+     * Render the paginator using the given view.
+     *
+     * @param  string|null  $view
+     * @param  array  $data
+     * @return string
+     */
+    public function links($view = null, $data = [])
+    {
+        return $this->render($view, $data);
+    }
+
+    /**
+     * Render the paginator using the given view.
+     *
+     * @param  string|null  $view
+     * @param  array  $data
+     * @return \Illuminate\Contracts\Support\Htmlable
+     */
+    public function render($view = null, $data = [])
+    {
+        return static::viewFactory()->make($view ?: static::$defaultSimpleView, array_merge($data, [
+            'paginator' => $this,
+        ]));
+    }
+
+    /**
+     * Manually indicate that the paginator does have more pages.
+     *
+     * @param  bool  $hasMore
+     * @return $this
+     */
+    public function hasMorePagesWhen($hasMore = true)
+    {
+        $this->hasMore = $hasMore;
+
+        return $this;
     }
 
     /**
@@ -91,23 +146,6 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     }
 
     /**
-     * Render the paginator using the given presenter.
-     *
-     * @param  \Illuminate\Contracts\Pagination\Presenter|null  $presenter
-     * @return string
-     */
-    public function render(Presenter $presenter = null)
-    {
-        if (is_null($presenter) && static::$presenterResolver) {
-            $presenter = call_user_func(static::$presenterResolver, $this);
-        }
-
-        $presenter = $presenter ?: new SimpleBootstrapThreePresenter($this);
-
-        return $presenter->render();
-    }
-
-    /**
      * Get the instance as an array.
      *
      * @return array
@@ -115,11 +153,26 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     public function toArray()
     {
         return [
-            'per_page' => $this->perPage(), 'current_page' => $this->currentPage(),
-            'next_page_url' => $this->nextPageUrl(), 'prev_page_url' => $this->previousPageUrl(),
-            'from' => $this->firstItem(), 'to' => $this->lastItem(),
+            'current_page' => $this->currentPage(),
             'data' => $this->items->toArray(),
+            'first_page_url' => $this->url(1),
+            'from' => $this->firstItem(),
+            'next_page_url' => $this->nextPageUrl(),
+            'path' => $this->path(),
+            'per_page' => $this->perPage(),
+            'prev_page_url' => $this->previousPageUrl(),
+            'to' => $this->lastItem(),
         ];
+    }
+
+    /**
+     * Convert the object into something JSON serializable.
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 
     /**
@@ -130,6 +183,6 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
      */
     public function toJson($options = 0)
     {
-        return json_encode($this->toArray(), $options);
+        return json_encode($this->jsonSerialize(), $options);
     }
 }

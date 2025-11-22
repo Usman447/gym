@@ -3,16 +3,19 @@
 namespace Illuminate\Queue;
 
 use Closure;
-use InvalidArgumentException;
 use Illuminate\Contracts\Queue\Factory as FactoryContract;
 use Illuminate\Contracts\Queue\Monitor as MonitorContract;
+use InvalidArgumentException;
 
+/**
+ * @mixin \Illuminate\Contracts\Queue\Queue
+ */
 class QueueManager implements FactoryContract, MonitorContract
 {
     /**
      * The application instance.
      *
-     * @var \Illuminate\Foundation\Application
+     * @var \Illuminate\Contracts\Foundation\Application
      */
     protected $app;
 
@@ -33,12 +36,23 @@ class QueueManager implements FactoryContract, MonitorContract
     /**
      * Create a new queue manager instance.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
      * @return void
      */
     public function __construct($app)
     {
         $this->app = $app;
+    }
+
+    /**
+     * Register an event listener for the before job event.
+     *
+     * @param  mixed  $callback
+     * @return void
+     */
+    public function before($callback)
+    {
+        $this->app['events']->listen(Events\JobProcessing::class, $callback);
     }
 
     /**
@@ -49,7 +63,18 @@ class QueueManager implements FactoryContract, MonitorContract
      */
     public function after($callback)
     {
-        $this->app['events']->listen('illuminate.queue.after', $callback);
+        $this->app['events']->listen(Events\JobProcessed::class, $callback);
+    }
+
+    /**
+     * Register an event listener for the exception occurred job event.
+     *
+     * @param  mixed  $callback
+     * @return void
+     */
+    public function exceptionOccurred($callback)
+    {
+        $this->app['events']->listen(Events\JobExceptionOccurred::class, $callback);
     }
 
     /**
@@ -60,7 +85,7 @@ class QueueManager implements FactoryContract, MonitorContract
      */
     public function looping($callback)
     {
-        $this->app['events']->listen('illuminate.queue.looping', $callback);
+        $this->app['events']->listen(Events\Looping::class, $callback);
     }
 
     /**
@@ -71,7 +96,7 @@ class QueueManager implements FactoryContract, MonitorContract
      */
     public function failing($callback)
     {
-        $this->app['events']->listen('illuminate.queue.failed', $callback);
+        $this->app['events']->listen(Events\JobFailed::class, $callback);
     }
 
     /**
@@ -82,13 +107,13 @@ class QueueManager implements FactoryContract, MonitorContract
      */
     public function stopping($callback)
     {
-        $this->app['events']->listen('illuminate.queue.stopping', $callback);
+        $this->app['events']->listen(Events\WorkerStopping::class, $callback);
     }
 
     /**
      * Determine if the driver is connected.
      *
-     * @param  string  $name
+     * @param  string|null  $name
      * @return bool
      */
     public function connected($name = null)
@@ -99,7 +124,7 @@ class QueueManager implements FactoryContract, MonitorContract
     /**
      * Resolve a queue connection instance.
      *
-     * @param  string  $name
+     * @param  string|null  $name
      * @return \Illuminate\Contracts\Queue\Queue
      */
     public function connection($name = null)
@@ -113,8 +138,6 @@ class QueueManager implements FactoryContract, MonitorContract
             $this->connections[$name] = $this->resolve($name);
 
             $this->connections[$name]->setContainer($this->app);
-
-            $this->connections[$name]->setEncrypter($this->app['encrypter']);
         }
 
         return $this->connections[$name];
@@ -125,12 +148,20 @@ class QueueManager implements FactoryContract, MonitorContract
      *
      * @param  string  $name
      * @return \Illuminate\Contracts\Queue\Queue
+     *
+     * @throws \InvalidArgumentException
      */
     protected function resolve($name)
     {
         $config = $this->getConfig($name);
 
-        return $this->getConnector($config['driver'])->connect($config);
+        if (is_null($config)) {
+            throw new InvalidArgumentException("The [{$name}] queue connection has not been configured.");
+        }
+
+        return $this->getConnector($config['driver'])
+            ->connect($config)
+            ->setConnectionName($name);
     }
 
     /**
@@ -143,29 +174,29 @@ class QueueManager implements FactoryContract, MonitorContract
      */
     protected function getConnector($driver)
     {
-        if (isset($this->connectors[$driver])) {
-            return call_user_func($this->connectors[$driver]);
+        if (! isset($this->connectors[$driver])) {
+            throw new InvalidArgumentException("No connector for [$driver].");
         }
 
-        throw new InvalidArgumentException("No connector for [$driver]");
+        return call_user_func($this->connectors[$driver]);
     }
 
     /**
      * Add a queue connection resolver.
      *
-     * @param  string    $driver
+     * @param  string  $driver
      * @param  \Closure  $resolver
      * @return void
      */
     public function extend($driver, Closure $resolver)
     {
-        return $this->addConnector($driver, $resolver);
+        $this->addConnector($driver, $resolver);
     }
 
     /**
      * Add a queue connection resolver.
      *
-     * @param  string    $driver
+     * @param  string  $driver
      * @param  \Closure  $resolver
      * @return void
      */
@@ -178,11 +209,15 @@ class QueueManager implements FactoryContract, MonitorContract
      * Get the queue connection configuration.
      *
      * @param  string  $name
-     * @return array
+     * @return array|null
      */
     protected function getConfig($name)
     {
-        return $this->app['config']["queue.connections.{$name}"];
+        if (! is_null($name) && $name !== 'null') {
+            return $this->app['config']["queue.connections.{$name}"];
+        }
+
+        return ['driver' => 'null'];
     }
 
     /**
@@ -209,7 +244,7 @@ class QueueManager implements FactoryContract, MonitorContract
     /**
      * Get the full name for the given connection.
      *
-     * @param  string  $connection
+     * @param  string|null  $connection
      * @return string
      */
     public function getName($connection = null)
@@ -218,26 +253,41 @@ class QueueManager implements FactoryContract, MonitorContract
     }
 
     /**
-     * Determine if the application is in maintenance mode.
+     * Get the application instance used by the manager.
      *
-     * @return bool
+     * @return \Illuminate\Contracts\Foundation\Application
      */
-    public function isDownForMaintenance()
+    public function getApplication()
     {
-        return $this->app->isDownForMaintenance();
+        return $this->app;
+    }
+
+    /**
+     * Set the application instance used by the manager.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @return $this
+     */
+    public function setApplication($app)
+    {
+        $this->app = $app;
+
+        foreach ($this->connections as $connection) {
+            $connection->setContainer($app);
+        }
+
+        return $this;
     }
 
     /**
      * Dynamically pass calls to the default connection.
      *
      * @param  string  $method
-     * @param  array   $parameters
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
     {
-        $callable = [$this->connection(), $method];
-
-        return call_user_func_array($callable, $parameters);
+        return $this->connection()->$method(...$parameters);
     }
 }

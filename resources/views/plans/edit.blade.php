@@ -11,11 +11,11 @@
                             <div class="panel-head font-size-20">Enter details of the plan</div>
                         </div>
 
-                        {!! Form::model($plan, ['method' => 'POST','action' => ['PlansController@update',$plan->id],'id'=>'plansform']) !!}
+                        <form action="{{ action([App\Http\Controllers\PlansController::class, 'update'], ['id' => $plan->id]) }}" method="POST" id="plansform">
+                            @csrf
+                            @method('PUT')
 
                         @include('plans.form',['submitButtonText' => 'Update'])
-
-                        {!! Form::Close() !!}
 
                         </form>
 

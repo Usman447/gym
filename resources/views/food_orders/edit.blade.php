@@ -19,8 +19,9 @@
                 </div>
             @endif
 
-            {!! Form::Open(['method' => 'POST', 'url' => 'food/orders/' . $foodOrder->id, 'id'=>'foodOrderForm']) !!}
-            {!! Form::hidden('_method', 'PUT') !!}
+            <form action="{{ url('food/orders/' . $foodOrder->id) }}" method="POST" id="foodOrderForm">
+                @csrf
+                @method('PUT')
             
             <!-- Order Details -->
             <div class="row">
@@ -34,14 +35,17 @@
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('order_number', 'Order Number') !!}
-                                        {!! Form::text('order_number', $foodOrder->order_number, ['class' => 'form-control', 'readonly' => 'readonly']) !!}
+                                        <label for="order_number">Order Number</label>
+                                        <input type="text" name="order_number" value="{{ $foodOrder->order_number }}" class="form-control" readonly="readonly">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('payment_mode', 'Payment Mode') !!}
-                                        {!! Form::select('payment_mode', [1 => 'Cash', 2 => 'Online'], $foodOrder->payment_mode, ['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'payment_mode']) !!}
+                                        <label for="payment_mode">Payment Mode</label>
+                                        <select name="payment_mode" class="form-control selectpicker show-tick show-menu-arrow" id="payment_mode">
+                                            <option value="1" {{ $foodOrder->payment_mode == 1 ? 'selected' : '' }}>Cash</option>
+                                            <option value="2" {{ $foodOrder->payment_mode == 2 ? 'selected' : '' }}>Online</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -135,12 +139,12 @@
             <div class="row">
                 <div class="col-sm-2 pull-right">
                     <div class="form-group">
-                        {!! Form::submit('Update Order', ['class' => 'btn btn-primary pull-right']) !!}
+                        <button type="submit" class="btn btn-primary pull-right">Update Order</button>
                     </div>
                 </div>
             </div>
 
-            {!! Form::Close() !!}
+            </form>
 
         </div>
     </div>

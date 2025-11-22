@@ -23,11 +23,12 @@
                             <div class="panel-head font-size-20">Enter details of the expense category</div>
                         </div>
                         <div class="panel-body">
-                            {!! Form::Open(['url' => 'expenses/categories', 'id' => 'expensecategoriesform']) !!}
+                            <form action="{{ url('expenses/categories') }}" method="POST" id="expensecategoriesform">
+                                @csrf
 
                             @include('expenseCategories.form',['submitButtonText' => 'Add'])
 
-                            {!! Form::Close() !!}
+                            </form>
                         </div>
                     </div>
                 </div>

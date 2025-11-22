@@ -11,46 +11,30 @@
 
 namespace Symfony\Component\Finder\Iterator;
 
+use Symfony\Component\Finder\SplFileInfo;
+
 /**
  * PathFilterIterator filters files by path patterns (e.g. some/special/dir).
  *
  * @author Fabien Potencier  <fabien@symfony.com>
  * @author Włodzimierz Gajda <gajdaw@gajdaw.pl>
+ *
+ * @extends MultiplePcreFilterIterator<string, SplFileInfo>
  */
 class PathFilterIterator extends MultiplePcreFilterIterator
 {
     /**
      * Filters the iterator values.
-     *
-     * @return bool true if the value should be kept, false otherwise
      */
-    public function accept()
+    public function accept(): bool
     {
         $filename = $this->current()->getRelativePathname();
 
-        if ('\\' === DIRECTORY_SEPARATOR) {
+        if ('\\' === \DIRECTORY_SEPARATOR) {
             $filename = str_replace('\\', '/', $filename);
         }
 
-        // should at least not match one rule to exclude
-        foreach ($this->noMatchRegexps as $regex) {
-            if (preg_match($regex, $filename)) {
-                return false;
-            }
-        }
-
-        // should at least match one rule
-        $match = true;
-        if ($this->matchRegexps) {
-            $match = false;
-            foreach ($this->matchRegexps as $regex) {
-                if (preg_match($regex, $filename)) {
-                    return true;
-                }
-            }
-        }
-
-        return $match;
+        return $this->isAccepted($filename);
     }
 
     /**
@@ -64,10 +48,8 @@ class PathFilterIterator extends MultiplePcreFilterIterator
      * Use only / as directory separator (on Windows also).
      *
      * @param string $str Pattern: regexp or dirname
-     *
-     * @return string regexp corresponding to a given string or regexp
      */
-    protected function toRegex($str)
+    protected function toRegex(string $str): string
     {
         return $this->isRegex($str) ? $str : '/'.preg_quote($str, '/').'/';
     }

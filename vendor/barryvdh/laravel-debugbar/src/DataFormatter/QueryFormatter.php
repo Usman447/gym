@@ -4,9 +4,9 @@ namespace Barryvdh\Debugbar\DataFormatter;
 
 use DebugBar\DataFormatter\DataFormatter;
 
+#[\AllowDynamicProperties]
 class QueryFormatter extends DataFormatter
 {
-
     /**
      * Removes extra spaces at the beginning and end of the SQL query and its lines.
      *
@@ -15,7 +15,10 @@ class QueryFormatter extends DataFormatter
      */
     public function formatSql($sql)
     {
-        return trim(preg_replace("/\s*\n\s*/", "\n", $sql));
+        $sql = preg_replace("/\?(?=(?:[^'\\\']*'[^'\\']*')*[^'\\\']*$)(?:\?)/", '?', $sql);
+        $sql = trim(preg_replace("/\s*\n\s*/", "\n", $sql));
+
+        return $sql;
     }
 
     /**
@@ -30,21 +33,15 @@ class QueryFormatter extends DataFormatter
             if (is_string($binding) && !mb_check_encoding($binding, 'UTF-8')) {
                 $binding = '[BINARY DATA]';
             }
-        }
 
-        return $bindings;
-    }
+            if (is_array($binding)) {
+                $binding = $this->checkBindings($binding);
+                $binding = '[' . implode(',', $binding) . ']';
+            }
 
-    /**
-     * Make the bindings safe for outputting.
-     *
-     * @param array $bindings
-     * @return array
-     */
-    public function escapeBindings($bindings)
-    {
-        foreach ($bindings as &$binding) {
-            $binding = htmlentities($binding, ENT_QUOTES, 'UTF-8', false);
+            if (is_object($binding)) {
+                $binding =  json_encode($binding);
+            }
         }
 
         return $bindings;
@@ -56,7 +53,7 @@ class QueryFormatter extends DataFormatter
      * @param  object|null  $source  If the backtrace is disabled, the $source will be null.
      * @return string
      */
-    public function formatSource($source)
+    public function formatSource($source, $short = false)
     {
         if (! is_object($source)) {
             return '';
@@ -64,11 +61,11 @@ class QueryFormatter extends DataFormatter
 
         $parts = [];
 
-        if ($source->namespace) {
+        if (!$short && $source->namespace) {
             $parts['namespace'] = $source->namespace . '::';
         }
 
-        $parts['name'] = $source->name;
+        $parts['name'] = $short ? basename($source->name) : $source->name;
         $parts['line'] = ':' . $source->line;
 
         return implode($parts);

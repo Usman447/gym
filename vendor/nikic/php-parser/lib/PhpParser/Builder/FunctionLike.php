@@ -1,16 +1,17 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace PhpParser\Builder;
 
-use PhpParser;
+use PhpParser\BuilderHelpers;
 use PhpParser\Node;
-use PhpParser\Node\Stmt;
 
-abstract class FunctionLike extends Declaration
-{
-    protected $returnByRef = false;
-    protected $params = array();
-    protected $returnType = null;
+abstract class FunctionLike extends Declaration {
+    protected bool $returnByRef = false;
+    /** @var Node\Param[] */
+    protected array $params = [];
+
+    /** @var Node\Identifier|Node\Name|Node\ComplexType|null */
+    protected ?Node $returnType = null;
 
     /**
      * Make the function return by reference.
@@ -31,7 +32,7 @@ abstract class FunctionLike extends Declaration
      * @return $this The builder instance (for fluid interface)
      */
     public function addParam($param) {
-        $param = $this->normalizeNode($param);
+        $param = BuilderHelpers::normalizeNode($param);
 
         if (!$param instanceof Node\Param) {
             throw new \LogicException(sprintf('Expected parameter node, got "%s"', $param->getType()));
@@ -45,7 +46,7 @@ abstract class FunctionLike extends Declaration
     /**
      * Adds multiple parameters.
      *
-     * @param array $params The parameters to add
+     * @param (Node\Param|Param)[] $params The parameters to add
      *
      * @return $this The builder instance (for fluid interface)
      */
@@ -60,18 +61,12 @@ abstract class FunctionLike extends Declaration
     /**
      * Sets the return type for PHP 7.
      *
-     * @param string|Node\Name $type One of array, callable, string, int, float, bool,
-     *                               or a class/interface name.
+     * @param string|Node\Name|Node\Identifier|Node\ComplexType $type
      *
      * @return $this The builder instance (for fluid interface)
      */
-    public function setReturnType($type)
-    {
-        if (in_array($type, array('array', 'callable', 'string', 'int', 'float', 'bool'))) {
-            $this->returnType = $type;
-        } else {
-            $this->returnType = $this->normalizeName($type);
-        }
+    public function setReturnType($type) {
+        $this->returnType = BuilderHelpers::normalizeType($type);
 
         return $this;
     }

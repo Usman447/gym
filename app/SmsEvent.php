@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class SmsEvent extends Model
@@ -23,7 +22,6 @@ class SmsEvent extends Model
     protected $dates = ['created_at', 'updated_at', 'date'];
 
     //Eloquence Search mapping
-    use Eloquence;
     use createdByUser, updatedByUser;
 
     protected $searchableColumns = [

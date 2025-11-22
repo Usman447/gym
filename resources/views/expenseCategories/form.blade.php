@@ -1,8 +1,8 @@
 <div class="row">
     <div class="col-sm-6">
         <div class="form-group">
-            {!! Form::label('name','Category Name') !!}
-            {!! Form::text('name',null,['class'=>'form-control', 'id' => 'name']) !!}
+            <label for="name">Category Name</label>
+            <input type="text" name="name" value="{{ old('name', isset($expenseCategory) ? $expenseCategory->name : '') }}" class="form-control" id="name">
         </div>
     </div>
 </div>
@@ -10,9 +10,12 @@
 <div class="row">
     <div class="col-sm-6">
         <div class="form-group">
-        {!! Form::label('status','Status') !!}
+        <label for="status">Status</label>
         <!--0 for inactive , 1 for active-->
-            {!! Form::select('status',array('1' => 'Active', '0' => 'InActive'),null,['class' => 'form-control', 'id' => 'status']) !!}
+            <select name="status" class="form-control" id="status">
+                <option value="1" {{ old('status', isset($expenseCategory) ? $expenseCategory->status : '') == '1' ? 'selected' : '' }}>Active</option>
+                <option value="0" {{ old('status', isset($expenseCategory) ? $expenseCategory->status : '') == '0' ? 'selected' : '' }}>InActive</option>
+            </select>
         </div>
     </div>
 </div>
@@ -20,7 +23,7 @@
 <div class="row">
     <div class="col-sm-6">
         <div class="form-group">
-            {!! Form::submit($submitButtonText, ['class' => 'btn btn-primary pull-right']) !!}
+            <button type="submit" class="btn btn-primary pull-right">{{ $submitButtonText }}</button>
         </div>
     </div>
 </div>                                                     

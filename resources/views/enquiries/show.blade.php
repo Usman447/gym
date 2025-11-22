@@ -320,22 +320,28 @@
                                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                                     <h4 class="modal-title">Kindly update the status and outcome</h4>
                                 </div>
-                                {!! Form::Open(['action' => ['FollowupsController@update',$followup->id],'id' => 'followupform']) !!}
+                                <form action="{{ action(['App\Http\Controllers\FollowupsController@update', $followup->id]) }}" method="POST" id="followupform">
+                                    @csrf
+                                    @method('PUT')
                                 <div class="modal-body">
 
-                                    {!! Form::hidden('enquiry_id',$followup->enquiry->id) !!}
+                                    <input type="hidden" name="enquiry_id" value="{{ $followup->enquiry->id }}">
 
                                     <div class="row">
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                {!! Form::label('date','Date') !!}
-                                                {!! Form::text('date',$followup->created_at->format('Y-m-d'),['class'=>'form-control', 'id' => 'date', 'readonly']) !!}
+                                                <label for="date">Date</label>
+                                                <input type="text" name="date" value="{{ $followup->created_at->format('Y-m-d') }}" class="form-control" id="date" readonly>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                {!! Form::label('followup_by','Follow Up By') !!}
-                                                {!! Form::select('followup_by',array('0' => 'Call', '1' => 'SMS', '2' => 'Personal'),$followup->followup_by,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'followup_by']) !!}
+                                                <label for="followup_by">Follow Up By</label>
+                                                <select name="followup_by" class="form-control selectpicker show-tick show-menu-arrow" id="followup_by">
+                                                    <option value="0" {{ $followup->followup_by == 0 ? 'selected' : '' }}>Call</option>
+                                                    <option value="1" {{ $followup->followup_by == 1 ? 'selected' : '' }}>SMS</option>
+                                                    <option value="2" {{ $followup->followup_by == 2 ? 'selected' : '' }}>Personal</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -343,14 +349,17 @@
                                     <div class="row">
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                {!! Form::label('due_date','Due Date') !!}
-                                                {!! Form::text('due_date',$followup->due_date->format('Y-m-d'),['class'=>'form-control', 'id' => 'due_date', 'readonly']) !!}
+                                                <label for="due_date">Due Date</label>
+                                                <input type="text" name="due_date" value="{{ $followup->due_date->format('Y-m-d') }}" class="form-control" id="due_date" readonly>
                                             </div>
                                         </div>
                                         <div class="col-sm-6">
                                             <div class="form-group">
-                                                {!! Form::label('status','Status') !!}
-                                                {!! Form::select('status',array('0' => 'Pending', '1' => 'Done',),$followup->status,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status']) !!}
+                                                <label for="status">Status</label>
+                                                <select name="status" class="form-control selectpicker show-tick show-menu-arrow" id="status">
+                                                    <option value="0" {{ $followup->status == 0 ? 'selected' : '' }}>Pending</option>
+                                                    <option value="1" {{ $followup->status == 1 ? 'selected' : '' }}>Done</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -358,8 +367,8 @@
                                     <div class="row">
                                         <div class="col-sm-12">
                                             <div class="form-group">
-                                                {!! Form::label('outcome','Outcome') !!}
-                                                {!! Form::text('outcome',$followup->outcome,['class'=>'form-control', 'id' => 'outcome']) !!}
+                                                <label for="outcome">Outcome</label>
+                                                <input type="text" name="outcome" value="{{ $followup->outcome }}" class="form-control" id="outcome">
                                             </div>
                                         </div>
                                     </div>
@@ -368,7 +377,7 @@
                                 <div class="modal-footer">
                                     <input type="submit" class="btn btn-info" value="Done" id="btn-{{ $followup->id }}"/>
                                 </div>
-                                {!! Form::Close() !!}
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -387,21 +396,26 @@
                             <h4 class="modal-title">New Followup</h4>
                         </div>
                         <div class="modal-body">
-                            {!! Form::Open(['action' => 'FollowupsController@store','files'=>'true']) !!}
-                            {!! Form::hidden('enquiry_id',$enquiry->id) !!}
+                            <form action="{{ action('App\Http\Controllers\FollowupsController@store') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                            <input type="hidden" name="enquiry_id" value="{{ $enquiry->id }}">
 
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('followup_by','FollowUp By') !!}
-                                        {!! Form::select('followup_by',array('0' => 'Call', '1' => 'SMS', '2' => 'Personal'),null,['class'=>'form-control selectpicker show-tick show-menu-arrow', 'id' => 'followup_by']) !!}
+                                        <label for="followup_by">FollowUp By</label>
+                                        <select name="followup_by" class="form-control selectpicker show-tick show-menu-arrow" id="followup_by">
+                                            <option value="0">Call</option>
+                                            <option value="1">SMS</option>
+                                            <option value="2">Personal</option>
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        {!! Form::label('due_date','Due Date') !!}
-                                        {!! Form::text('due_date',null,['class'=>'form-control datepicker-default', 'id' => 'due_date']) !!}
+                                        <label for="due_date">Due Date</label>
+                                        <input type="text" name="due_date" value="" class="form-control datepicker-default" id="due_date">
                                     </div>
                                 </div>
                             </div>
@@ -409,7 +423,7 @@
                         </div>
                         <div class="modal-footer">
                             <input type="submit" class="btn btn-info" value="Create" id="createFollowup"/>
-                            {!! Form::Close() !!}
+                            </form>
                         </div>
                     </div>
                 </div>

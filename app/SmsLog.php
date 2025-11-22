@@ -3,7 +3,6 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
 
 class SmsLog extends Model
@@ -24,7 +23,6 @@ class SmsLog extends Model
     protected $dates = ['send_time'];
 
     //Eloquence Search mapping
-    use Eloquence;
 
     protected $searchableColumns = [
         'number' => 20,
@@ -35,5 +33,24 @@ class SmsLog extends Model
     public function scopeDashboardLogs($query)
     {
         return $query->where('send_time', '<=', Carbon::now())->take(5)->orderBy('send_time', 'desc');
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        $searchTerm = trim($searchTerm, '"\'');
+        if (empty($searchTerm)) {
+            return $query;
+        }
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('number', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('message', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('status', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 }

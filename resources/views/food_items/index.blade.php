@@ -39,34 +39,35 @@
                                 </div>
                             @endif
 
-                            {!! Form::Open(['url' => 'food/items', 'id' => 'foodItemsForm']) !!}
+                            <form action="{{ url('food/items') }}" method="POST" id="foodItemsForm">
+                                @csrf
                             
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('name', 'Name') !!}
-                                        {!! Form::text('name', null, ['class' => 'form-control', 'placeholder' => 'Enter food name', 'required']) !!}
+                                        <label for="name">Name</label>
+                                        <input type="text" name="name" value="" class="form-control" placeholder="Enter food name" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('amount', 'Amount') !!}
+                                        <label for="amount">Amount</label>
                                         <div class="input-group">
                                             <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                                            {!! Form::text('amount', null, ['class' => 'form-control', 'placeholder' => 'Enter amount', 'required']) !!}
+                                            <input type="text" name="amount" value="" class="form-control" placeholder="Enter amount" required>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        {!! Form::label('&nbsp;') !!}
+                                        <label>&nbsp;</label>
                                         <br/>
                                         <button type="submit" class="btn btn-primary active no-border">Add</button>
                                     </div>
                                 </div>
                             </div>
 
-                            {!! Form::Close() !!}
+                            </form>
                         </div>
                     </div>
                 </div>

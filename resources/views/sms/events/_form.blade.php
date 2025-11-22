@@ -6,8 +6,8 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('name','Event name') !!}
-                {!! Form::text('name',null,['class'=>'form-control', 'id' => 'name']) !!}
+                <label for="name">Event name</label>
+                <input type="text" name="name" value="{{ old('name', isset($event) ? $event->name : '') }}" class="form-control" id="name">
             </div>
         </div>
     </div>
@@ -15,12 +15,8 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('date','Event date') !!}
-                @if(isset($event) && $event->date != "")
-                    {!! Form::text('date',$event->date->format('Y-m-d'),['class'=>'form-control datepicker-default', 'id' => 'date']) !!}
-                @else
-                    {!! Form::text('date',null,['class'=>'form-control datepicker-default', 'id' => 'date']) !!}
-                @endif
+                <label for="date">Event date</label>
+                <input type="text" name="date" value="{{ old('date', isset($event) && $event->date != "" ? $event->date->format('Y-m-d') : '') }}" class="form-control datepicker-default" id="date">
             </div>
         </div>
     </div>
@@ -29,8 +25,8 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('description','Event description') !!}
-                {!! Form::text('description',null,['class'=>'form-control', 'id' => 'description']) !!}
+                <label for="description">Event description</label>
+                <input type="text" name="description" value="{{ old('description', isset($event) ? $event->description : '') }}" class="form-control" id="description">
             </div>
         </div>
     </div>
@@ -38,9 +34,12 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-            {!! Form::label('status','Status') !!}
+            <label for="status">Status</label>
             <!--0 for inactive , 1 for active-->
-                {!! Form::select('status',array('1' => 'Active', '0' => 'InActive'),null,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status']) !!}
+                <select name="status" class="form-control selectpicker show-tick show-menu-arrow" id="status">
+                    <option value="1" {{ old('status', isset($event) ? $event->status : '') == '1' ? 'selected' : '' }}>Active</option>
+                    <option value="0" {{ old('status', isset($event) ? $event->status : '') == '0' ? 'selected' : '' }}>InActive</option>
+                </select>
             </div>
         </div>
     </div>
@@ -48,15 +47,20 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('send_to','Send to') !!}
-                {!! Form::select('send_to[]',array('0' => 'Active members', '1' => 'Inactive members', '2' => 'Lead enquiries', '3' => 'Lost enquiries'),null,['class'=>'form-control selectpicker show-tick show-menu-arrow','multiple' => 'multiple', 'id' => 'send_to']) !!}
+                <label for="send_to">Send to</label>
+                <select name="send_to[]" class="form-control selectpicker show-tick show-menu-arrow" multiple="multiple" id="send_to">
+                    <option value="0" {{ old('send_to', isset($event) && is_array($event->send_to) && in_array('0', $event->send_to) ? 'selected' : '') }}>Active members</option>
+                    <option value="1" {{ old('send_to', isset($event) && is_array($event->send_to) && in_array('1', $event->send_to) ? 'selected' : '') }}>Inactive members</option>
+                    <option value="2" {{ old('send_to', isset($event) && is_array($event->send_to) && in_array('2', $event->send_to) ? 'selected' : '') }}>Lead enquiries</option>
+                    <option value="3" {{ old('send_to', isset($event) && is_array($event->send_to) && in_array('3', $event->send_to) ? 'selected' : '') }}>Lost enquiries</option>
+                </select>
             </div>
         </div>
     </div>
 
     @if($count == 1)
 
-        {!! Form::hidden('sender_id',\Utilities::getSetting('sms_sender_id')) !!}
+        <input type="hidden" name="sender_id" value="{{ \Utilities::getSetting('sms_sender_id') }}">
 
     @elseif($count > 1)
 
@@ -78,8 +82,8 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('message','Message text') !!}
-                {!! Form::textarea('message',null,['class'=>'form-control', 'id' => 'message','rows' => '5']) !!}
+                <label for="message">Message text</label>
+                <textarea name="message" class="form-control" id="message" rows="5">{{ old('message', isset($event) ? $event->message : '') }}</textarea>
             </div>
         </div>
     </div>
@@ -87,7 +91,7 @@ $senderIds = explode(',', \Utilities::getSetting('sender_id_list'));
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::submit($submitButtonText, ['class' => 'btn btn-primary pull-right']) !!}
+                <button type="submit" class="btn btn-primary pull-right">{{ $submitButtonText }}</button>
             </div>
         </div>
     </div>

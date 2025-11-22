@@ -3,14 +3,13 @@
 namespace App;
 
 use Carbon\Carbon;
-use Sofa\Eloquence\Eloquence;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
-use Spatie\MediaLibrary\HasMedia\Interfaces\HasMediaConversions;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\HasMedia;
 
-class Member extends Model implements HasMediaConversions
+class Member extends Model implements HasMedia
 {
-    use HasMediaTrait, Eloquence;
+    use InteractsWithMedia;
     use createdByUser, updatedByUser;
 
     protected $table = 'mst_members';
@@ -49,11 +48,19 @@ class Member extends Model implements HasMediaConversions
     ];
 
     // Media i.e. Image size conversion
-    public function registerMediaConversions()
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
     {
-        $this->addMediaConversion('thumb')->setManipulations(['w' => 50, 'h' => 50, 'q' => 100, 'fit' => 'crop'])->performOnCollections('profile');
+        $this->addMediaConversion('thumb')
+             ->width(50)
+             ->height(50)
+             ->quality(100)
+             ->performOnCollections('profile');
 
-        $this->addMediaConversion('form')->setManipulations(['w' => 70, 'h' => 70, 'q' => 100, 'fit' => 'crop'])->performOnCollections('profile', 'proof');
+        $this->addMediaConversion('form')
+             ->width(70)
+             ->height(70)
+             ->quality(100)
+             ->performOnCollections('profile', 'proof');
     }
 
     //Relationships
@@ -108,6 +115,35 @@ class Member extends Model implements HasMediaConversions
     public function scopeRegistrations($query, $month, $year)
     {
         return $query->whereMonth('created_at', '=', $month)->whereYear('created_at', '=', $year)->count();
+    }
+
+    /**
+     * Search scope to replace Eloquence search functionality
+     * Searches across member_code, name, and contact fields
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $searchTerm Search term (may be quoted like '"term"')
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeSearch($query, $searchTerm)
+    {
+        if (empty($searchTerm)) {
+            return $query;
+        }
+
+        // Remove quotes if present (old Eloquence format)
+        $searchTerm = trim($searchTerm, '"\'');
+        
+        if (empty($searchTerm)) {
+            return $query;
+        }
+
+        // Search across searchable columns
+        return $query->where(function($q) use ($searchTerm) {
+            $q->where('member_code', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('contact', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 
     /**

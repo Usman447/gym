@@ -2,8 +2,8 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('plan_code','Plan Code') !!}
-                {!! Form::text('plan_code',null,['class'=>'form-control', 'id' => 'plan_code']) !!}
+                <label for="plan_code">Plan Code</label>
+                <input type="text" name="plan_code" value="{{ old('plan_code', isset($plan) ? $plan->plan_code : '') }}" class="form-control" id="plan_code">
             </div>
         </div>
     </div>
@@ -11,8 +11,8 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('plan_name','Plan Name') !!}
-                {!! Form::text('plan_name',null,['class'=>'form-control', 'id' => 'plan_name']) !!}
+                <label for="plan_name">Plan Name</label>
+                <input type="text" name="plan_name" value="{{ old('plan_name', isset($plan) ? $plan->plan_name : '') }}" class="form-control" id="plan_name">
             </div>
         </div>
     </div>
@@ -21,20 +21,20 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('plan_details','Plan Details') !!}
-                {!! Form::text('plan_details',null,['class'=>'form-control', 'id' => 'plan_details']) !!}
+                <label for="plan_details">Plan Details</label>
+                <input type="text" name="plan_details" value="{{ old('plan_details', isset($plan) ? $plan->plan_details : '') }}" class="form-control" id="plan_details">
             </div>
         </div>
     </div>
 
     {{-- Service field removed - using plan name instead --}}
-    {!! Form::hidden('service_id', null) !!}
+    <input type="hidden" name="service_id" value="">
 
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('days','Days') !!}
-                {!! Form::text('days',null,['class'=>'form-control', 'id' => 'days']) !!}
+                <label for="days">Days</label>
+                <input type="text" name="days" value="{{ old('days', isset($plan) ? $plan->days : '') }}" class="form-control" id="days">
             </div>
         </div>
     </div>
@@ -43,10 +43,10 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::label('amount','Amount (without taxes)') !!}
+                <label for="amount">Amount (without taxes)</label>
                 <div class="input-group">
                     <div class="input-group-addon"><i class="fa fa-inr"></i></div>
-                    {!! Form::text('amount',null,['class'=>'form-control', 'id' => 'amount']) !!}
+                    <input type="text" name="amount" value="{{ old('amount', isset($plan) ? $plan->amount : '') }}" class="form-control" id="amount">
                 </div>
             </div>
         </div>
@@ -55,9 +55,12 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-            {!! Form::label('status','Status') !!}
+            <label for="status">Status</label>
             <!--0 for inactive , 1 for active-->
-                {!! Form::select('status',array('1' => 'Active', '0' => 'InActive'),null,['class' => 'form-control selectpicker show-tick show-menu-arrow', 'id' => 'status']) !!}
+                <select name="status" class="form-control selectpicker show-tick show-menu-arrow" id="status">
+                    <option value="1" {{ old('status', isset($plan) ? $plan->status : '') == '1' ? 'selected' : '' }}>Active</option>
+                    <option value="0" {{ old('status', isset($plan) ? $plan->status : '') == '0' ? 'selected' : '' }}>InActive</option>
+                </select>
             </div>
         </div>
     </div>
@@ -65,7 +68,7 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-group">
-                {!! Form::submit($submitButtonText, ['class' => 'btn btn-primary pull-right']) !!}
+                <button type="submit" class="btn btn-primary pull-right">{{ $submitButtonText }}</button>
             </div>
         </div>
     </div>
